@@ -38,7 +38,7 @@ from torch.utils.data import DataLoader
 from pathlib import Path
 
 from sklearn.model_selection import train_test_split
-import os
+import time
 
 # local imports
 import verify
@@ -53,43 +53,31 @@ mp_policy = None
 bf16_ready = verify.bf16_ready
 
 if bf16_ready:
-    mp_policy = verify.bfSixteen
+    mp_policy = policies.bfSixteen
     print(f"bFloat16 enabled for mixed precision")
 else:
-    mp_policy = mp_policy.fpSixteen
+    mp_policy = policies.fpSixteen
     print(f"bFloat16 support not present. Using fp16 for mixed precision")
 
 
-def set_printing():
-    """
-    disables print when not in rank 0
-    """
-    import builtins as __builtin__
-    builtin_print = __builtin__.print
-
-    
-    def print(*args, **kwargs):
-        force = kwargs.pop('force', False)
-        if 0== os.getenv("RANK") or force:
-            builtin_print(*args, **kwargs)
-
-    __builtin__.print = print
-
-
-
 def parse_args():
-  parser = argparse.ArgumentParser(description="PyTorch fsdp T5.11 Example")
-  parser.add_argument('--save-dir', default = '/model_chkpt',type=str
-  parser.add_argument(
+    parser = argparse.ArgumentParser(description="PyTorch fsdp T5.11 Example")
+    parser.add_argument("--save-dir", default="/model_chkpt", type=str)
+    parser.add_argument(
         "--save-model",
         action="store_true",
         default=False,
         help="For Saving the current Model",
     )
-  args = parser.parse_args()
-  return args
+    parser.add_argument(
+        "--seed", type=int, default=1, metavar="S", help="random seed (default: 2022)"
+    )
+    args = parser.parse_args()
+    return args
+
 
 # ----------------   Main functions --------------------
+
 
 def setup(rank, world_size):
     os.environ["MASTER_ADDR"] = g_addr
@@ -98,41 +86,53 @@ def setup(rank, world_size):
     # initialize the process group
     dist.init_process_group("nccl", rank=rank, world_size=world_size)
 
+
 def setup_environ_flags():
-  os.environ["TORCH_SHOW_CPP_STACKTRACES"] = str(1)
+    os.environ["TORCH_SHOW_CPP_STACKTRACES"] = str(1)
+
 
 def cleanup():
     dist.destroy_process_group()
 
 
+def setup_tasks(rank, world_size):
+    """keep the basic setup list here"""
+    setup(rank, world_size)
+    set_printing()
+    setup_environ_flags()
+
+    # ---- fsdp main ------------------------------------------------------------
+
+
 def fsdp_main(rank, world_size, args):
-  """ main process within each process """
-  setup()
-  set_printing()
-  setup_environ_flags()
+    """main process within each process"""
+    setup_tasks(rank, world_size)
 
-  model_name = "t5"
+    model_name = "t5"
 
-  print(f"--> Training for {model_name}")
+    print(f"--> Training for {model_name}")
 
-
-
-
-
-
-  cleanup()
-  pass
+    dist.barrier()
+    cleanup()
 
 
 # ------------------ Main functions above ------------
 
 
-if name == __main__:
-  
-  args = parse_args()
-  
-  # seed
-  torch.manual_seed(args.seed)
-  gpus_per_node = torch.cuda.device_count()
- 
-  mp.spawn(fsdp_main, args=(gpus_per_node, args,), nprocs=gpus_per_node, join=True)
+if __name__ == "__main__":
+
+    args = parse_args()
+
+    # seed
+    torch.manual_seed(args.seed)
+    gpus_per_node = torch.cuda.device_count()
+
+    mp.spawn(
+        fsdp_main,
+        args=(
+            gpus_per_node,
+            args,
+        ),
+        nprocs=gpus_per_node,
+        join=True,
+    )
