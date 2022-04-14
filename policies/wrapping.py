@@ -18,6 +18,7 @@ from torch.distributed.fsdp.wrap import (
     wrap,
 )
 import functools
+from typing import Type
 
 
 def transformer_wrapper(

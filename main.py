@@ -66,7 +66,7 @@ def parse_args():
 
 
 # ----------------   Main functions --------------------
-def get_policies():
+def get_policies(fsdp_unit_params=1000000):
 
     """establish current policies for mixed precision and fsdp wrapping"""
 
@@ -84,7 +84,7 @@ def get_policies():
         print(f"bFloat16 support not present. Using fp16 for mixed precision")
 
     # wrapping policy -------
-    wrapping_policy = policies.get_t5_wrapper()
+    wrapping_policy = policies.get_t5_wrapper(fsdp_unit_params)
 
     return mixed_precision_policy, wrapping_policy
 
@@ -118,11 +118,21 @@ def fsdp_main(rank, world_size, args):
     """main process within each process"""
     setup_tasks(rank, world_size)
 
-    mp_policy, wrapping_policy = get_policies()
+    fsdp_unit_params = 1000000
 
-    model_name = "t5"
+    mp_policy, wrapping_policy = get_policies(fsdp_unit_params)
 
-    print(f"--> Training for {model_name}")
+    model_name = "google/t5-v1_1-base"
+    printable_model_name = str.replace(model_name, "/", "==")
+    # t5-base
+    # google/t5-v1_1-small
+    # google/t5-v1_1-base
+    # google/t5-v1_1-large
+    # google/t5-v1_1-xl  #3b
+    # google/t5-v1_1-xxl #11b
+
+    if rank == 0:
+        print(f"--> Training for {model_name}")
 
     dist.barrier()
     cleanup()
