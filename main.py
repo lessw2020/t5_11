@@ -48,17 +48,6 @@ import policies
 g_port = "12369"
 g_addr = "localhost"
 
-# setup policies
-mp_policy = None
-bf16_ready = verify.bf16_ready
-
-if bf16_ready:
-    mp_policy = policies.bfSixteen
-    print(f"bFloat16 enabled for mixed precision")
-else:
-    mp_policy = policies.fpSixteen
-    print(f"bFloat16 support not present. Using fp16 for mixed precision")
-
 
 def parse_args():
     parser = argparse.ArgumentParser(description="PyTorch fsdp T5.11 Example")
@@ -77,6 +66,27 @@ def parse_args():
 
 
 # ----------------   Main functions --------------------
+def get_policies():
+
+    """establish current policies for mixed precision and fsdp wrapping"""
+
+    mixed_precision_policy = None
+    wrapping_policy = None
+
+    # mixed precision -----
+    bf16_ready = verify.bf16_ready
+
+    if bf16_ready:
+        mixed_precision_policy = policies.bfSixteen
+        print(f"bFloat16 enabled for mixed precision")
+    else:
+        mixed_precision_policy = policies.fpSixteen
+        print(f"bFloat16 support not present. Using fp16 for mixed precision")
+
+    # wrapping policy -------
+    wrapping_policy = policies.get_t5_wrapper()
+
+    return mixed_precision_policy, wrapping_policy
 
 
 def setup(rank, world_size):
@@ -98,7 +108,7 @@ def cleanup():
 def setup_tasks(rank, world_size):
     """keep the basic setup list here"""
     setup(rank, world_size)
-    set_printing()
+    # set_printing()
     setup_environ_flags()
 
     # ---- fsdp main ------------------------------------------------------------
@@ -107,6 +117,8 @@ def setup_tasks(rank, world_size):
 def fsdp_main(rank, world_size, args):
     """main process within each process"""
     setup_tasks(rank, world_size)
+
+    mp_policy, wrapping_policy = get_policies()
 
     model_name = "t5"
 
