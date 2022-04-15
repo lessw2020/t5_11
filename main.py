@@ -10,14 +10,12 @@ import torch.optim as optim
 from torchvision import datasets, transforms
 
 
-from transformers import AutoModelForSeq2SeqLM, AutoModelForSequenceClassification
-from transformers import (
-    AutoModelForSeq2SeqLM,
-    AutoModelForSequenceClassification,
-    AutoModelForCausalLM,
-)
-from transformers import AutoTokenizer  # , GPT2TokenizerFast
+# for grammar correction
+from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
+
+# for generation
 from transformers import T5Tokenizer, T5ForConditionalGeneration
+from transformers import DataCollatorForSeq2Seq
 
 import functools
 from torch.optim.lr_scheduler import StepLR
@@ -230,8 +228,14 @@ def fsdp_main(rank, world_size, args):
     # google/t5-v1_1-xl  #3b
     # google/t5-v1_1-xxl #11b
 
-    model = T5ForConditionalGeneration.from_pretrained(model_name)
-    tokenizer = T5Tokenizer.from_pretrained(model_name)
+    # grammar correction
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
+
+    model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
+
+    # summarization
+    # model = T5ForConditionalGeneration.from_pretrained(model_name)
+    # tokenizer = T5Tokenizer.from_pretrained(model_name)
     dataset_name = "wikihow"
 
     dataset = load_dataset(dataset_name, "all", data_dir="../Fusion/data/wikihow")
