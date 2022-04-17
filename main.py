@@ -2,6 +2,7 @@
 
 import os
 import argparse
+from grammar_dataset import grammar
 from policies import mixed_precision
 import torch
 import torch.nn as nn
@@ -51,7 +52,8 @@ import time
 # local imports
 import verify
 import policies
-from wikihow_dataset import wikihow
+
+# from jfleg_dataset import wikihow
 
 # some globals
 g_port = "12368"
@@ -219,6 +221,10 @@ def fsdp_main(rank, world_size, args):
 
     mp_policy, wrapping_policy = get_policies(fsdp_unit_params)
 
+    temp_train()
+    print(f"bailing early...remove")
+    return
+
     model_name = "google/t5-v1_1-base"
     printable_model_name = str.replace(model_name, "/", "==")
     # t5-base
@@ -236,9 +242,9 @@ def fsdp_main(rank, world_size, args):
     # summarization
     # model = T5ForConditionalGeneration.from_pretrained(model_name)
     # tokenizer = T5Tokenizer.from_pretrained(model_name)
-    dataset_name = "wikihow"
+    dataset_name = "jfleg_train.csv"
 
-    dataset = load_dataset(dataset_name, "all", data_dir="../Fusion/data/wikihow")
+    dataset = load_dataset("csv", data_files={"train": dataset_name}, delimiter=",")
 
     if rank == 0:
         print(f"--> Training for {model_name}")
@@ -251,7 +257,8 @@ def fsdp_main(rank, world_size, args):
             "Size of {dataset_name} Validation dataset: ", dataset["validation"].shape
         )
 
-    tokenizer = T5Tokenizer.from_pretrained(model_name)
+    # ____________ create batch dataset
+
     train_dataset = wikihow(tokenizer, "train", None, 512, 150, True)
     val_dataset = wikihow(tokenizer, "validation", None, 512, 150, True)
 
@@ -338,6 +345,66 @@ def fsdp_main(rank, world_size, args):
     cleanup()
 
 
+# ------------ temp train -------------
+def temp_train():
+    """breaking out the dataloader to use batch processing"""
+    model_name = "t5-small"
+
+    printable_model_name = str.replace(model_name, "/", "==")
+    # google/t5-v1_1-base"
+    # t5-base
+    # google/t5-v1_1-small
+    # google/t5-v1_1-base
+    # google/t5-v1_1-large
+    # google/t5-v1_1-xl  #3b
+    # google/t5-v1_1-xxl #11b
+
+    # grammar correction
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
+
+    model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
+
+    # summarization
+    # model = T5ForConditionalGeneration.from_pretrained(model_name)
+    # tokenizer = T5Tokenizer.from_pretrained(model_name)
+    dataset_name = "grammar_train.csv"
+
+    full_dataset = load_dataset(
+        "csv",
+        data_files={
+            "train": ["grammar_train.csv"]
+        },  # "eval": "grammar_validation.csv"},
+        delimiter=",",
+    )
+
+    def __preprocess_function(examples):
+        model_inputs = tokenizer(examples["input"], max_length=512, truncation=True)
+
+        # Setup the tokenizer for targets
+        with tokenizer.as_target_tokenizer():
+            labels = tokenizer(examples["target"], max_length=512, truncation=True)
+
+        model_inputs["labels"] = labels["input_ids"]
+        return model_inputs
+
+    print(f"-->Succcess!!!")
+    return
+
+    tokenized_dataset = dataset.map(
+        __preprocess_function,
+        batched=True,
+        remove_columns=["input", "target"],
+    )
+
+    data_collator = DataCollatorForSeq2Seq(tokenizer, model=model)
+
+    training_dataset = tokenized_dataset["train"]
+
+    if 0 == os.getenv("rank"):
+        print(training_dataset.len())
+    print(f"end temp_train")
+
+
 # ------------------ Main functions above ------------
 
 
@@ -348,6 +415,17 @@ if __name__ == "__main__":
     # seed
     torch.manual_seed(args.seed)
     gpus_per_node = torch.cuda.device_count()
+
+    # cache workaround
+    dataset_name = "grammar_train.csv"
+
+    temp_full_dataset = load_dataset(
+        "csv",
+        data_files={
+            "train": ["grammar_train.csv"]
+        },  # "eval": "grammar_validation.csv"},
+        delimiter=",",
+    )
 
     mp.spawn(
         fsdp_main,
