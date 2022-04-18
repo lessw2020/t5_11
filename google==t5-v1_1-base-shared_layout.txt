@@ -1,4 +1,4 @@
-model = google/t5-v1_1-base, sharded with 1000000 parameters
+model = google/t5-v1_1-base, sharded with 4000000 parameters
 
 
 --> google/t5-v1_1-base has 247.577856 params

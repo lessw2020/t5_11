@@ -54,10 +54,15 @@ import verify
 import policies
 
 import datasets_grammar as dg
+import tqdm
 
 # some globals
-g_port = "12368"
+g_port = "12369"
 g_addr = "localhost"
+
+
+def _is_rank_0():
+    return 0 == os.getenv("RANK")
 
 
 def parse_args():
@@ -215,8 +220,8 @@ def fsdp_main(rank, world_size, args):
     """main process within each process"""
     setup_tasks(rank, world_size)
 
-    fsdp_unit_params = 1000000
-    batch_size = 4
+    fsdp_unit_params = 4000000
+    batch_size = 8
     test_batch_size = 4
 
     mp_policy, wrapping_policy = get_policies(fsdp_unit_params)
@@ -225,7 +230,7 @@ def fsdp_main(rank, world_size, args):
     # print(f"bailing early...remove")
     # return
 
-    model_name = "google/t5-v1_1-base"
+    model_name = "t5-small"  # google/t5-v1_1-base"
     printable_model_name = str.replace(model_name, "/", "==")
     # t5-base
     # google/t5-v1_1-small
@@ -313,8 +318,19 @@ def fsdp_main(rank, world_size, args):
     optimizer = optim.AdamW(model.parameters(), lr=lr)
 
     scheduler = StepLR(optimizer, step_size=1, gamma=gamma)
+    epochs = 2
+    # --- main training loop - todo, this needs to be modularized
+    if rank == 0:
+        dur = []
+        training_start_time = time.time()
 
-    for epoch in range(1, args.epochs + 1):
+    for epoch in range(1, epochs + 2):
+        if rank == 0:
+            print(f"--> Starting Epoch {epoch}")
+            inner_pbar = tqdm.tqdm(
+                range(len(train_loader)), colour="blue", desc="r0 Training Epoch"
+            )
+            t0 = time.time()
         train(
             args,
             model,
@@ -327,8 +343,17 @@ def fsdp_main(rank, world_size, args):
         )
         # test(model, rank, world_size, test_loader)
         scheduler.step()
+        if rank == 0:
+            inner_pbar.update(1)
+            dur.append(time.time() - t0)
 
     # init_end_event.record()
+    if _is_rank_0:
+        inner_pbar.close()
+        print("Total training time = {time.time()-training_start_time}")
+        print("Times per epoch:")
+        for i, val in enumerate(dur):
+            print(f"epoch {i}, time {val}")
 
     if rank == 0:
         # print(
