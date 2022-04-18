@@ -57,7 +57,7 @@ import datasets_grammar as dg
 import tqdm
 
 # some globals
-g_port = "12369"
+g_port = "12345"
 g_addr = "localhost"
 
 
@@ -128,9 +128,14 @@ def cleanup():
     dist.destroy_process_group()
 
 
+def clear_gpu_cache():
+    torch.cuda.empty_cache()
+
+
 def setup_tasks(rank, world_size):
     """keep the basic setup list here"""
     setup(rank, world_size)
+    # clear_gpu_cache() - need to call torch set device first?
     # set_printing()
     setup_environ_flags()
 
@@ -142,6 +147,10 @@ def train(args, model, rank, world_size, train_loader, optimizer, epoch, sampler
 
     if sampler:
         sampler.set_epoch(epoch)
+    if rank == 0:
+        inner_pbar = tqdm.tqdm(
+            range(len(train_loader)), colour="blue", desc="r0 Training Epoch"
+        )
     for batch in train_loader:
         for key in batch.keys():
             batch[key] = batch[key].to(rank)
@@ -170,9 +179,12 @@ def train(args, model, rank, world_size, train_loader, optimizer, epoch, sampler
         optimizer.step()
         ddp_loss[0] += loss.item()
         ddp_loss[1] += len(batch)
+        if rank == 0:
+            inner_pbar.update(1)
 
     dist.reduce(ddp_loss, 0, op=dist.ReduceOp.SUM)
     if rank == 0:
+        inner_pbar.close()
         print("Train Epoch: {} \tLoss: {:.6f}".format(epoch, ddp_loss[0] / ddp_loss[1]))
 
 
@@ -284,6 +296,7 @@ def fsdp_main(rank, world_size, args):
     # test_loader = torch.utils.data.DataLoader(val_dataset, **test_kwargs)
 
     torch.cuda.set_device(rank)
+    clear_gpu_cache()
 
     # init_start_event = torch.cuda.Event(enable_timing=True)
     # init_end_event = torch.cuda.Event(enable_timing=True)
@@ -327,9 +340,7 @@ def fsdp_main(rank, world_size, args):
     for epoch in range(1, epochs + 2):
         if rank == 0:
             print(f"--> Starting Epoch {epoch}")
-            inner_pbar = tqdm.tqdm(
-                range(len(train_loader)), colour="blue", desc="r0 Training Epoch"
-            )
+
             t0 = time.time()
         train(
             args,
@@ -344,12 +355,12 @@ def fsdp_main(rank, world_size, args):
         # test(model, rank, world_size, test_loader)
         scheduler.step()
         if rank == 0:
-            inner_pbar.update(1)
+
             dur.append(time.time() - t0)
 
     # init_end_event.record()
-    if _is_rank_0:
-        inner_pbar.close()
+    if rank == 0:
+        # inner_pbar.close()
         print("Total training time = {time.time()-training_start_time}")
         print("Times per epoch:")
         for i, val in enumerate(dur):
