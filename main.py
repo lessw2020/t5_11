@@ -2,7 +2,7 @@
 
 import os
 import argparse
-from grammar_dataset import grammar
+from datasets_grammar.grammar_dataset import grammar
 from policies import mixed_precision
 import torch
 import torch.nn as nn
@@ -53,7 +53,7 @@ import time
 import verify
 import policies
 
-# from jfleg_dataset import wikihow
+import datasets_grammar as dg
 
 # some globals
 g_port = "12368"
@@ -221,9 +221,9 @@ def fsdp_main(rank, world_size, args):
 
     mp_policy, wrapping_policy = get_policies(fsdp_unit_params)
 
-    temp_train()
-    print(f"bailing early...remove")
-    return
+    # temp_train()
+    # print(f"bailing early...remove")
+    # return
 
     model_name = "google/t5-v1_1-base"
     printable_model_name = str.replace(model_name, "/", "==")
@@ -242,39 +242,40 @@ def fsdp_main(rank, world_size, args):
     # summarization
     # model = T5ForConditionalGeneration.from_pretrained(model_name)
     # tokenizer = T5Tokenizer.from_pretrained(model_name)
-    dataset_name = "jfleg_train.csv"
-
-    dataset = load_dataset("csv", data_files={"train": dataset_name}, delimiter=",")
+    # dataset_name = "jfleg_train.csv"
 
     if rank == 0:
         print(f"--> Training for {model_name}")
         total_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
         print(f"\n--> {model_name} has {total_params/1e6} Million params\n")
 
-        print(f"{dataset_name} contains: {dataset.keys()}")
-        print("Size of {dataset_name} train dataset: ", dataset["train"].shape)
-        print(
-            "Size of {dataset_name} Validation dataset: ", dataset["validation"].shape
-        )
+        # print(f"{dataset_name} contains: {dataset.keys()}")
+        # print("Size of {dataset_name} train dataset: ", dataset["train"].shape)
+        # print(
+        #    "Size of {dataset_name} Validation dataset: ", dataset["validation"].shape
+        # )
 
     # ____________ create batch dataset
 
-    train_dataset = wikihow(tokenizer, "train", None, 512, 150, True)
-    val_dataset = wikihow(tokenizer, "validation", None, 512, 150, True)
+    train_dataset = dg.get_dataset(tokenizer, None, 512, 150, True)
+    print(len(train_dataset))
+    # print("bailing")
+
+    # val_dataset = wikihow(tokenizer, "validation", None, 512, 150, True)
 
     sampler1 = DistributedSampler(
         train_dataset, rank=rank, num_replicas=world_size, shuffle=True
     )
-    sampler2 = DistributedSampler(val_dataset, rank=rank, num_replicas=world_size)
+    # sampler2 = DistributedSampler(val_dataset, rank=rank, num_replicas=world_size)
 
     train_kwargs = {"batch_size": batch_size, "sampler": sampler1}
-    test_kwargs = {"batch_size": test_batch_size, "sampler": sampler2}
+    # test_kwargs = {"batch_size": test_batch_size, "sampler": sampler2}
     cuda_kwargs = {"num_workers": 2, "pin_memory": True, "shuffle": False}
     train_kwargs.update(cuda_kwargs)
-    test_kwargs.update(cuda_kwargs)
+    # test_kwargs.update(cuda_kwargs)
 
     train_loader = torch.utils.data.DataLoader(train_dataset, **train_kwargs)
-    test_loader = torch.utils.data.DataLoader(val_dataset, **test_kwargs)
+    # test_loader = torch.utils.data.DataLoader(val_dataset, **test_kwargs)
 
     torch.cuda.set_device(rank)
 
@@ -323,7 +324,7 @@ def fsdp_main(rank, world_size, args):
             epoch,
             sampler=sampler1,
         )
-        test(model, rank, world_size, test_loader)
+        # test(model, rank, world_size, test_loader)
         scheduler.step()
 
     # init_end_event.record()
@@ -364,10 +365,7 @@ def temp_train():
 
     model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
 
-    # summarization
-    # model = T5ForConditionalGeneration.from_pretrained(model_name)
-    # tokenizer = T5Tokenizer.from_pretrained(model_name)
-    dataset_name = "grammar_train.csv"
+    # dataset_name = "grammar_train.csv"
 
     full_dataset = load_dataset(
         "csv",
@@ -376,16 +374,6 @@ def temp_train():
         },  # "eval": "grammar_validation.csv"},
         delimiter=",",
     )
-
-    def __preprocess_function(examples):
-        model_inputs = tokenizer(examples["input"], max_length=512, truncation=True)
-
-        # Setup the tokenizer for targets
-        with tokenizer.as_target_tokenizer():
-            labels = tokenizer(examples["target"], max_length=512, truncation=True)
-
-        model_inputs["labels"] = labels["input_ids"]
-        return model_inputs
 
     print(f"-->Succcess!!!")
     return
@@ -417,15 +405,18 @@ if __name__ == "__main__":
     gpus_per_node = torch.cuda.device_count()
 
     # cache workaround
-    dataset_name = "grammar_train.csv"
+    """ dataset_name = "grammar_train.csv"
+    full_path_dataset = Path.cwd()/'datasets_grammar'/dataset_name
 
     temp_full_dataset = load_dataset(
         "csv",
         data_files={
-            "train": ["grammar_train.csv"]
+            "train": [full_path_dataset]
         },  # "eval": "grammar_validation.csv"},
         delimiter=",",
     )
+    print(f"temp dset loaded in main = len {len(temp_full_dataset)}")
+    """
 
     mp.spawn(
         fsdp_main,
