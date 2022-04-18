@@ -314,7 +314,7 @@ def fsdp_main(rank, world_size, args):
     if rank == 0:
         print(f"model ")
         fn = printable_model_name + "-shared_layout.txt"
-        with open(fn, "w") as external_file:
+        """with open(fn, "w") as external_file:
             header_text = (
                 f"model = {model_name}, sharded with {fsdp_unit_params} parameters\n"
             )
@@ -325,21 +325,21 @@ def fsdp_main(rank, world_size, args):
             print(f"model wrapping = \n{model}\n\n", file=external_file)
 
             external_file.close()
-
+        """
     lr = 0.0008
     gamma = 0.7
     optimizer = optim.AdamW(model.parameters(), lr=lr)
 
     scheduler = StepLR(optimizer, step_size=1, gamma=gamma)
-    epochs = 2
+    epochs = 3
     # --- main training loop - todo, this needs to be modularized
     if rank == 0:
         dur = []
         training_start_time = time.time()
 
-    for epoch in range(1, epochs + 2):
+    for epoch in range(1, epochs + 1):
         if rank == 0:
-            print(f"--> Starting Epoch {epoch}")
+            print(f"\n--> Starting Epoch {epoch}")
 
             t0 = time.time()
         train(
@@ -361,11 +361,11 @@ def fsdp_main(rank, world_size, args):
     # init_end_event.record()
     if rank == 0:
         # inner_pbar.close()
-        print("Total training time = {time.time()-training_start_time}")
+        print(f"Total training time = {time.time()-training_start_time}")
         print("Times per epoch:")
         for i, val in enumerate(dur):
-            print(f"epoch {i}, time {val}")
-
+            print(f"epoch {i}, time {val:.2f}")
+        print()
     if rank == 0:
         # print(
         # f"Cuda event elapsed time: {init_start_event.elapsed_time(init_end_event) / 1000}sec"
