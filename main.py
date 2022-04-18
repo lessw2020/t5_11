@@ -257,8 +257,9 @@ def fsdp_main(rank, world_size, args):
 
     # ____________ create batch dataset
 
-    train_dataset = dg.get_dataset(tokenizer, None, 512, 150, True)
-    print(len(train_dataset))
+    train_dataset = dg.get_dataset(tokenizer, None, 512, 512, True)
+    if 0 == os.getenv("RANK"):
+        print(len(train_dataset))
     # print("bailing")
 
     # val_dataset = wikihow(tokenizer, "validation", None, 512, 150, True)
