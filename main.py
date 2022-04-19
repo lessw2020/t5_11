@@ -337,8 +337,9 @@ def fsdp_main(rank, world_size, args):
     optimizer = optim.AdamW(model.parameters(), lr=lr)
 
     scheduler = StepLR(optimizer, step_size=1, gamma=gamma)
-    epochs = 3
+    epochs = 1
     best_train_accuracy = float("inf")
+
     # --- main training loop - todo, this needs to be modularized
     if rank == 0:
         dur = []
@@ -382,13 +383,16 @@ def fsdp_main(rank, world_size, args):
 
         # save block
         save_model = True
+
         if save_model:
             dist.barrier()
             states = model.state_dict()
         if rank == 0:
             print(f"--> saving model ...")
             model_save_name = model_name + "train_acc.pt"
+
             torch.save(states, model_save_name)
+
             print(f"--> saved {model_save_name} to disk")
 
     dist.barrier()
