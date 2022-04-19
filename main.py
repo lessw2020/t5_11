@@ -56,6 +56,9 @@ import policies
 import datasets_grammar as dg
 import tqdm
 
+# config
+from defaults import train_config
+
 # some globals
 g_port = "12369"
 g_addr = "localhost"
@@ -113,9 +116,9 @@ def get_policies(fsdp_unit_params=1000000):
     return mixed_precision_policy, wrapping_policy
 
 
-def setup(rank, world_size):
+def setup(rank, world_size, cfg):
     os.environ["MASTER_ADDR"] = g_addr
-    os.environ["MASTER_PORT"] = g_port
+    os.environ["MASTER_PORT"] = cfg.host_port
 
     # initialize the process group
     dist.init_process_group("nccl", rank=rank, world_size=world_size)
@@ -133,9 +136,9 @@ def clear_gpu_cache():
     torch.cuda.empty_cache()
 
 
-def setup_tasks(rank, world_size):
+def setup_tasks(rank, world_size, cfg):
     """keep the basic setup list here"""
-    setup(rank, world_size)
+    setup(rank, world_size, cfg)
     # clear_gpu_cache() - need to call torch set device first?
     # set_printing()
     setup_environ_flags()
@@ -236,7 +239,12 @@ def test(model, rank, world_size, test_loader):
 
 def fsdp_main(rank, world_size, args):
     """main process within each process"""
-    setup_tasks(rank, world_size)
+    cfg = train_config()  # loads from defaults
+
+    if rank == 0:
+        print(f"--> running with these defaults {cfg}")
+
+    setup_tasks(rank, world_size, cfg)
 
     fsdp_unit_params = 12000000
     batch_size = 8
@@ -382,7 +390,7 @@ def fsdp_main(rank, world_size, args):
         # print(f"{model}")
 
         # save block
-        save_model = True
+        save_model = cfg.save_model
 
         if save_model:
             dist.barrier()
