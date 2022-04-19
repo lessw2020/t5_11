@@ -57,7 +57,7 @@ import datasets_grammar as dg
 import tqdm
 
 # some globals
-g_port = "12345"
+g_port = "12369"
 g_addr = "localhost"
 
 
@@ -101,12 +101,13 @@ def get_policies(fsdp_unit_params=1000000):
 
     if bf16_ready:
         mixed_precision_policy = policies.bfSixteen
-        print(f"bFloat16 enabled for mixed precision")
+        print(f"bFloat16 enabled for mixed precision - using working policy")
     else:
         mixed_precision_policy = policies.fpSixteen
         print(f"bFloat16 support not present. Using fp16 for mixed precision")
 
     # wrapping policy -------
+
     wrapping_policy = policies.get_t5_wrapper(fsdp_unit_params)
 
     return mixed_precision_policy, wrapping_policy
@@ -183,9 +184,14 @@ def train(args, model, rank, world_size, train_loader, optimizer, epoch, sampler
             inner_pbar.update(1)
 
     dist.reduce(ddp_loss, 0, op=dist.ReduceOp.SUM)
+    train_accuracy = ddp_loss[0] / ddp_loss[1]
     if rank == 0:
         inner_pbar.close()
-        print("Train Epoch: {} \tLoss: {:.6f}".format(epoch, ddp_loss[0] / ddp_loss[1]))
+
+        print(
+            f"Train Epoch: \t{epoch}, Loss: \t{train_accuracy:.4f}"
+        )  # .format(epoch, train_accuracy))
+    return train_accuracy
 
 
 # ---- Validation ---------------
@@ -232,7 +238,7 @@ def fsdp_main(rank, world_size, args):
     """main process within each process"""
     setup_tasks(rank, world_size)
 
-    fsdp_unit_params = 4000000
+    fsdp_unit_params = 12000000
     batch_size = 8
     test_batch_size = 4
 
@@ -308,7 +314,7 @@ def fsdp_main(rank, world_size, args):
     model = FSDP(
         model,
         auto_wrap_policy=wrapping_policy,
-        mixed_precision=mp_policy,
+        # mixed_precision=mp_policy,
     ).to(rank)
 
     if rank == 0:
@@ -332,6 +338,7 @@ def fsdp_main(rank, world_size, args):
 
     scheduler = StepLR(optimizer, step_size=1, gamma=gamma)
     epochs = 3
+    best_train_accuracy = float("inf")
     # --- main training loop - todo, this needs to be modularized
     if rank == 0:
         dur = []
@@ -342,7 +349,7 @@ def fsdp_main(rank, world_size, args):
             print(f"\n--> Starting Epoch {epoch}")
 
             t0 = time.time()
-        train(
+        train_accuracy = train(
             args,
             model,
             rank,
@@ -361,7 +368,8 @@ def fsdp_main(rank, world_size, args):
     # init_end_event.record()
     if rank == 0:
         # inner_pbar.close()
-        print(f"Total training time = {time.time()-training_start_time}")
+        total_training_time = time.time() - training_start_time
+        print(f"Total training time = {total_training_time:.2f}")
         print("Times per epoch:")
         for i, val in enumerate(dur):
             print(f"epoch {i}, time {val:.2f}")
@@ -373,61 +381,18 @@ def fsdp_main(rank, world_size, args):
         # print(f"{model}")
 
         # save block
-        """if args.save_model:
+        save_model = True
+        if save_model:
             dist.barrier()
             states = model.state_dict()
         if rank == 0:
-            torch.save(states, "t5_small_wikihow.pt")
-        """
+            print(f"--> saving model ...")
+            model_save_name = model_name + "train_acc.pt"
+            torch.save(states, model_save_name)
+            print(f"--> saved {model_save_name} to disk")
+
     dist.barrier()
     cleanup()
-
-
-# ------------ temp train -------------
-def temp_train():
-    """breaking out the dataloader to use batch processing"""
-    model_name = "t5-small"
-
-    printable_model_name = str.replace(model_name, "/", "==")
-    # google/t5-v1_1-base"
-    # t5-base
-    # google/t5-v1_1-small
-    # google/t5-v1_1-base
-    # google/t5-v1_1-large
-    # google/t5-v1_1-xl  #3b
-    # google/t5-v1_1-xxl #11b
-
-    # grammar correction
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
-
-    model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
-
-    # dataset_name = "grammar_train.csv"
-
-    full_dataset = load_dataset(
-        "csv",
-        data_files={
-            "train": ["grammar_train.csv"]
-        },  # "eval": "grammar_validation.csv"},
-        delimiter=",",
-    )
-
-    print(f"-->Succcess!!!")
-    return
-
-    tokenized_dataset = dataset.map(
-        __preprocess_function,
-        batched=True,
-        remove_columns=["input", "target"],
-    )
-
-    data_collator = DataCollatorForSeq2Seq(tokenizer, model=model)
-
-    training_dataset = tokenized_dataset["train"]
-
-    if 0 == os.getenv("rank"):
-        print(training_dataset.len())
-    print(f"end temp_train")
 
 
 # ------------------ Main functions above ------------
