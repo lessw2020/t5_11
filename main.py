@@ -314,7 +314,7 @@ def fsdp_main(rank, world_size, args):
     model = FSDP(
         model,
         auto_wrap_policy=wrapping_policy,
-        # mixed_precision=mp_policy,
+        mixed_precision=mp_policy,
     ).to(rank)
 
     if rank == 0:
