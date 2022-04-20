@@ -43,10 +43,6 @@ from datasets import load_dataset, load_metric
 from torch.utils.data import DataLoader
 from pathlib import Path
 from torch.utils.data import DataLoader
-from nlp import load_metric
-from nlp import load_dataset
-
-from sklearn.model_selection import train_test_split
 import time
 
 # local imports
