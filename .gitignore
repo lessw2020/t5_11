@@ -1,2 +1,7 @@
-"*.pyc"
-"*.pt"
+# Ignoring files by extension
+# All files with these extensions will be ignored in
+# this directory and all its sub-directories.
+# - ignore pycache and .pt model files
+
+*.pt
+*.pyc
