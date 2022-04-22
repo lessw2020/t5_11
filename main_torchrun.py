@@ -268,6 +268,7 @@ def fsdp_main(args):
     tokenizer = AutoTokenizer.from_pretrained(model_name)
 
     model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
+    model.gradient_checkpointing_enable()
 
     # summarization
     # model = T5ForConditionalGeneration.from_pretrained(model_name)
