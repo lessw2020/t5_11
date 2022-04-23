@@ -104,7 +104,7 @@ def get_policies(fsdp_unit_params=1000000):
 
     if bf16_ready:
         mixed_precision_policy = policies.bfSixteen
-        print(f"bFloat16 enabled for mixed precision - using working policy")
+        print(f"bFloat16 enabled for mixed precision - using bfSixteen policy")
     else:
         mixed_precision_policy = policies.fpSixteen
         print(f"bFloat16 support not present. Using fp16 for mixed precision")
@@ -260,8 +260,8 @@ def fsdp_main(rank, world_size, args):
 
     setup_tasks(rank, world_size, cfg)
 
-    fsdp_unit_params = 12000000
-    batch_size = 8
+    fsdp_unit_params = 4000000
+    batch_size = 4
     test_batch_size = 4
 
     mp_policy, wrapping_policy = get_policies(fsdp_unit_params)
@@ -270,8 +270,8 @@ def fsdp_main(rank, world_size, args):
     # print(f"bailing early...remove")
     # return
 
-    model_name = "t5-small"  # "google/t5-v1_1-small"  #   #
-    save_name = "t5small-"
+    model_name = "t5-large"  # "google/t5-v1_1-small"  #   #
+    save_name = "t5large-"
     printable_model_name = str.replace(model_name, "/", "==")
     # t5-base
     # google/t5-v1_1-small
@@ -334,6 +334,10 @@ def fsdp_main(rank, world_size, args):
 
     # model = model.to(rank)
     # model = DDP(model)
+    if cfg.activation_checkpointing:
+        model.gradient_checkpointing_enable()
+        print(f"Activation checkpointing enabled\n")
+
     model = FSDP(
         model,
         auto_wrap_policy=wrapping_policy,
@@ -370,7 +374,7 @@ def fsdp_main(rank, world_size, args):
         training_start_time = time.time()
 
     torch_profiler = None
-    with torch.profiler.profile(
+    """with torch.profiler.profile(
         activities=[
             torch.profiler.ProfilerActivity.CPU,
             torch.profiler.ProfilerActivity.CUDA,
@@ -383,49 +387,50 @@ def fsdp_main(rank, world_size, args):
         with_stack=False,
         record_shapes=True,
     ) as torch_profiler:
+    """
 
-        for epoch in range(1, epochs + 1):
-            if rank == 0:
-                print(f"\n--> Starting Epoch {epoch}")
-
-                t0 = time.time()
-            train_accuracy = train(
-                args,
-                model,
-                rank,
-                world_size,
-                train_loader,
-                optimizer,
-                epoch,
-                sampler=sampler1,
-                profiler=torch_profiler,
-            )
-            # test(model, rank, world_size, test_loader)
-            scheduler.step()
-            if rank == 0:
-
-                dur.append(time.time() - t0)
-
-        # init_end_event.record()
+    for epoch in range(1, epochs + 1):
         if rank == 0:
-            # inner_pbar.close()
-            total_training_time = time.time() - training_start_time
-            print(f"Total training time = {total_training_time:.2f}")
-            print("Times per epoch:")
-            for i, val in enumerate(dur):
-                print(f"epoch {i}, time {val:.2f}")
-            print()
+            print(f"\n--> Starting Epoch {epoch}")
 
-            # print(
-            # f"Cuda event elapsed time: {init_start_event.elapsed_time(init_end_event) / 1000}sec"
-            # )
-            # print(f"{model}")
+            t0 = time.time()
+        train_accuracy = train(
+            args,
+            model,
+            rank,
+            world_size,
+            train_loader,
+            optimizer,
+            epoch,
+            sampler=sampler1,
+            profiler=torch_profiler,
+        )
+        # test(model, rank, world_size, test_loader)
+        scheduler.step()
+        if rank == 0:
 
-            # save block
-            # save_model = cfg.save_model
+            dur.append(time.time() - t0)
 
-            # debug hang
-            # runs on all ranks
+    # init_end_event.record()
+    if rank == 0:
+        # inner_pbar.close()
+        total_training_time = time.time() - training_start_time
+        print(f"Total training time = {total_training_time:.2f}")
+        print("Times per epoch:")
+        for i, val in enumerate(dur):
+            print(f"epoch {i}, time {val:.2f}")
+        print()
+
+        # print(
+        # f"Cuda event elapsed time: {init_start_event.elapsed_time(init_end_event) / 1000}sec"
+        # )
+        # print(f"{model}")
+
+        # save block
+        # save_model = cfg.save_model
+
+        # debug hang
+        # runs on all ranks
         # print(f"rank {rank} calling barrier")
         # dist.barrier()
         # print(f"rank {rank} done w barrier, calling state_dict")
@@ -446,8 +451,7 @@ def fsdp_main(rank, world_size, args):
     # memory summary
     if rank == 0:
         print(
-            f"CUDA Memory Summary After \
-            Whole Training Loop: {torch.cuda.memory_summary()}"
+            f"CUDA Memory Summary After Whole Training Loop:\n {torch.cuda.memory_summary()}"
         )
 
     dist.barrier()
