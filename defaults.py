@@ -7,3 +7,4 @@ class train_config:
     save_model: bool = True
     mixed_precision: bool = True
     host_port: str = "12369"
+    activation_checkpointing: bool = True

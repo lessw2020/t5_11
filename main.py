@@ -134,7 +134,8 @@ def cleanup():
     dist.destroy_process_group()
 
 
-def clear_gpu_cache():
+def clear_gpu_cache(rank=None):
+    print(f"clearing cache for rank {rank}")
     torch.cuda.empty_cache()
 
 
@@ -325,7 +326,7 @@ def fsdp_main(rank, world_size, args):
     # test_loader = torch.utils.data.DataLoader(val_dataset, **test_kwargs)
 
     torch.cuda.set_device(rank)
-    clear_gpu_cache()
+    clear_gpu_cache(rank)
 
     # init_start_event = torch.cuda.Event(enable_timing=True)
     # init_end_event = torch.cuda.Event(enable_timing=True)
