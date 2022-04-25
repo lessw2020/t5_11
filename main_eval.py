@@ -17,6 +17,7 @@ from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 # for generation
 from transformers import T5Tokenizer, T5ForConditionalGeneration
 from transformers import DataCollatorForSeq2Seq
+from transformers import AutoModelWithLMHead
 
 import functools
 from torch.optim.lr_scheduler import StepLR
@@ -284,7 +285,10 @@ def fsdp_main(rank, world_size, args):
     # grammar correction
     tokenizer = AutoTokenizer.from_pretrained(model_name)
 
-    model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
+    # model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
+
+    model = AutoModelWithLMHead.from_pretrained(model_name)
+    model.load_state_dict(torch.load(cfg.model_checkpoint))
 
     # summarization
     # model = T5ForConditionalGeneration.from_pretrained(model_name)
@@ -303,32 +307,32 @@ def fsdp_main(rank, world_size, args):
         # )
 
     # ____________ create batch dataset
-    train_name = None
-    if cfg.dataset_train:
-        train_name = cfg.dataset_train
+    test_name = None
+    if cfg.dataset_test:
+        test_name = cfg.dataset_train
 
-    train_dataset = dg.get_dataset(tokenizer, train_name, 512, 512, True)
+    test_dataset = dg.get_dataset(tokenizer, test_name, 512, 512, True)
     if 0 == os.getenv("RANK"):
-        print(len(train_dataset))
-        print(f"using dataset {train_name}")
+        print(len(test_dataset))
+        print(f"using dataset {test_name}")
     # print("bailing")
 
     # val_dataset = wikihow(tokenizer, "validation", None, 512, 150, True)
 
-    sampler1 = DistributedSampler(
-        train_dataset, rank=rank, num_replicas=world_size, shuffle=True
-    )
-    # sampler2 = DistributedSampler(val_dataset, rank=rank, num_replicas=world_size)
-    print(f"batch size = {batch_size}")
+    # sampler1 = DistributedSampler(
+    #    test_dataset, rank=rank, num_replicas=world_size, shuffle=True
+    # )
+    sampler_val = DistributedSampler(test_dataset, rank=rank, num_replicas=world_size)
+    print(f"batch size = {cfg.batch_size}")
 
-    train_kwargs = {"batch_size": batch_size, "sampler": sampler1}
-    # test_kwargs = {"batch_size": test_batch_size, "sampler": sampler2}
+    # train_kwargs = {"batch_size": batch_size, "sampler": sampler1}
+    test_kwargs = {"batch_size": cfg.test_batch_size, "sampler": sampler_val}
     cuda_kwargs = {"num_workers": 2, "pin_memory": True, "shuffle": False}
-    train_kwargs.update(cuda_kwargs)
-    # test_kwargs.update(cuda_kwargs)
+    # train_kwargs.update(cuda_kwargs)
+    test_kwargs.update(cuda_kwargs)
 
-    train_loader = torch.utils.data.DataLoader(train_dataset, **train_kwargs)
-    # test_loader = torch.utils.data.DataLoader(val_dataset, **test_kwargs)
+    # train_loader = torch.utils.data.DataLoader(test_dataset, **train_kwargs)
+    test_loader = torch.utils.data.DataLoader(test_dataset, **test_kwargs)
 
     torch.cuda.set_device(rank)
     clear_gpu_cache(rank)
@@ -350,7 +354,7 @@ def fsdp_main(rank, world_size, args):
         # mixed_precision=mp_policy,
     ).to(rank)
 
-    if rank == 0:
+    """if rank == 0:
         print(f"model ")
         fn = printable_model_name + "-shared_layout.txt"
         with open(fn, "w") as external_file:
@@ -367,15 +371,16 @@ def fsdp_main(rank, world_size, args):
             print(f"model wrapping = \n{model}\n\n", file=external_file)
 
             external_file.close()
+    """
 
-    lr = 0.0008
-    gamma = 0.7
-    optimizer = optim.AdamW(model.parameters(), lr=lr)
+    # lr = 0.0008
+    # gamma = 0.7
+    # optimizer = optim.AdamW(model.parameters(), lr=lr)
 
-    scheduler = StepLR(optimizer, step_size=1, gamma=gamma)
+    # scheduler = StepLR(optimizer, step_size=1, gamma=gamma)
     epochs = cfg.num_epochs
     if rank == 0:
-        print(f"Training for {epochs} epochs")
+        print(f"Eval for {epochs} epochs")
 
     best_train_accuracy = float("inf")
 
@@ -405,7 +410,7 @@ def fsdp_main(rank, world_size, args):
             print(f"\n--> Starting Epoch {epoch}")
 
             t0 = time.time()
-        train_accuracy = train(
+        """train_accuracy = train(
             args,
             model,
             rank,
@@ -416,14 +421,14 @@ def fsdp_main(rank, world_size, args):
             sampler=sampler1,
             profiler=torch_profiler,
         )
-
-        # test(model, rank, world_size, test_loader)
-        scheduler.step()
+        """
+        test(model, rank, world_size, test_loader)
+        # scheduler.step()
         if rank == 0:
 
             dur.append(time.time() - t0)
 
-        if cfg.save_model:
+        """if cfg.save_model:
             states = model.state_dict()
             print(f"rank {rank}  done w state_dict")
             # dist.barrier()
@@ -437,18 +442,18 @@ def fsdp_main(rank, world_size, args):
                 torch.save(states, model_save_name)
 
                 print(f"--> saved {model_save_name} to disk")
-
-            # memory summary
-            if rank == 0:
-                print(
-                    f"CUDA Memory Summary After Whole Training Loop:\n {torch.cuda.memory_summary()}"
-                )
+        """
+        # memory summary
+        if rank == 0:
+            print(
+                f"CUDA Memory Summary After Whole Training Loop:\n {torch.cuda.memory_summary()}"
+            )
 
     # init_end_event.record()
     if rank == 0:
         # inner_pbar.close()
         total_training_time = time.time() - training_start_time
-        print(f"Total training time = {total_training_time:.2f}")
+        print(f"Total test time = {total_training_time:.2f}")
         print("Times per epoch:")
         for i, val in enumerate(dur):
             print(f"epoch {i}, time {val:.2f}")
