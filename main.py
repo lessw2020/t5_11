@@ -265,7 +265,7 @@ def fsdp_main(rank, world_size, args):
     fsdp_unit_params = cfg.fsdp_unit_size
     batch_size = cfg.batch_size
     if rank == 0:
-        print(f"BatchSize = {batch_size}")
+        print(f"\n BatchSize = {batch_size}\n")
 
     test_batch_size = 4
 
