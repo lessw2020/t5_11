@@ -9,12 +9,13 @@ class train_config:
     # model
     model_name = "t5-small"
     save_model: bool = True
-    model_checkpoint = "t5large_2e.pt"
+    model_checkpoint = "t5small_2e.pt"
+    print_sharding_plan: bool = True
 
     # policies
-    fsdp_unit_size = 2000000
+    fsdp_unit_size = 5000000
     mixed_precision: bool = True
-    activation_checkpointing: bool = True
+    activation_checkpointing: bool = False
 
     # datasets
     dataset_train = "datasets_grammar/grammar_train.csv"  # grammar_13k.csv
@@ -22,7 +23,7 @@ class train_config:
 
     # training
     batch_size: int = 32
-    num_epochs: int = 5
+    num_epochs: int = 2
 
     # logging
     track_memory = True

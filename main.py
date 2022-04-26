@@ -345,15 +345,17 @@ def fsdp_main(rank, world_size, args):
         model.gradient_checkpointing_enable()
         print(f"Activation checkpointing enabled\n")
     print("mixed precision off!!")
+    print("warning - sharding plan off")
+
     model = FSDP(
         model,
-        auto_wrap_policy=wrapping_policy,
+        # auto_wrap_policy=wrapping_policy,
         # mixed_precision=mp_policy,
     ).to(rank)
 
-    if rank == 0:
+    if rank == 0 and cfg.print_sharding_plan:
         print(f"model ")
-        fn = printable_model_name + "-shared_layout.txt"
+        fn = printable_model_name + "-sharded_layout.txt"
         with open(fn, "w") as external_file:
             header_text = (
                 f"model = {model_name}, sharded with {fsdp_unit_params} parameters\n"
