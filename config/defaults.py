@@ -13,8 +13,8 @@ class train_config:
     print_sharding_plan: bool = True
 
     # policies
-    fsdp_unit_size = 5000000
-    mixed_precision: bool = True
+    fsdp_unit_size = 2000000
+    use_mixed_precision: bool = False
     activation_checkpointing: bool = False
 
     # datasets
@@ -22,7 +22,7 @@ class train_config:
     dataset_test = "datasets_grammar/grammar_validation.csv"
 
     # training
-    batch_size: int = 32
+    batch_size: int = 8
     num_epochs: int = 2
 
     # logging

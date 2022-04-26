@@ -1,4 +1,4 @@
-model = t5-small, sharded with 2000000 parameters
+model = t5-small, sharded with 5000000 parameters
 
 
 --> t5-small has 60.506624 Million params

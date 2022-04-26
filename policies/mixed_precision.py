@@ -30,3 +30,9 @@ bfSixteen_working = MixedPrecision(
     reduce_dtype=torch.bfloat16,
     buffer_dtype=torch.bfloat16,
 )
+
+fp32_policy = MixedPrecision(
+    param_dtype=torch.float32,
+    reduce_dtype=torch.float32,
+    buffer_dtype=torch.float32,
+)

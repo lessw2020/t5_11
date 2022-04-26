@@ -92,7 +92,7 @@ def parse_args():
 
 
 # ----------------   Main functions --------------------
-def get_policies(fsdp_unit_params=1000000):
+def get_policies(cfg, fsdp_unit_params=1000000):
 
     """establish current policies for mixed precision and fsdp wrapping"""
 
@@ -100,14 +100,15 @@ def get_policies(fsdp_unit_params=1000000):
     wrapping_policy = None
 
     # mixed precision -----
-    bf16_ready = verify.bf16_ready
+    if cfg.use_mixed_precision:
+        bf16_ready = verify.bf16_ready
 
-    if bf16_ready:
-        mixed_precision_policy = policies.bfSixteen
-        print(f"bFloat16 enabled for mixed precision - using bfSixteen policy")
-    else:
-        mixed_precision_policy = policies.fpSixteen
-        print(f"bFloat16 support not present. Using fp16 for mixed precision")
+        if bf16_ready:
+            mixed_precision_policy = policies.bfSixteen
+            print(f"bFloat16 enabled for mixed precision - using bfSixteen policy")
+        else:
+            mixed_precision_policy = policies.fpSixteen
+            print(f"bFloat16 support not present. Using fp16 for mixed precision")
 
     # wrapping policy -------
     # print(f"**overriding mp to fp16 - remove")
@@ -263,10 +264,12 @@ def fsdp_main(rank, world_size, args):
 
     fsdp_unit_params = cfg.fsdp_unit_size
     batch_size = cfg.batch_size
+    if rank == 0:
+        print(f"BatchSize = {batch_size}")
 
     test_batch_size = 4
 
-    mp_policy, wrapping_policy = get_policies(fsdp_unit_params)
+    mp_policy, wrapping_policy = get_policies(cfg, fsdp_unit_params)
 
     # temp_train()
     # print(f"bailing early...remove")
@@ -345,7 +348,6 @@ def fsdp_main(rank, world_size, args):
         model.gradient_checkpointing_enable()
         print(f"Activation checkpointing enabled\n")
     print("mixed precision off!!")
-    print("warning - sharding plan off")
 
     model = FSDP(
         model,
