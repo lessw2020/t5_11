@@ -57,7 +57,7 @@ import datasets_grammar as dg
 import tqdm
 
 # config
-from defaults import train_config
+import config
 
 # some globals
 g_port = "12369"
@@ -254,7 +254,7 @@ def test(model, rank, world_size, test_loader):
 
 def fsdp_main(rank, world_size, args):
     """main process within each process"""
-    cfg = train_config()  # loads from defaults
+    cfg = config.train_config()  # loads from defaults
 
     if rank == 0:
         print(f"--> running with these defaults {cfg}")
