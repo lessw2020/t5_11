@@ -220,6 +220,10 @@ def test(model, rank, world_size, test_loader):
     model.eval()
     correct = 0
     ddp_loss = torch.zeros(3).to(rank)
+    if rank == 0:
+        inner_pbar = tqdm.tqdm(
+            range(len(test_loader)), colour="green", desc="r0 Validation Epoch"
+        )
     with torch.no_grad():
         for batch in test_loader:
             for key in batch.keys():
@@ -231,6 +235,9 @@ def test(model, rank, world_size, test_loader):
             )
             ddp_loss[0] += output["loss"].item()  # sum up batch loss
             ddp_loss[1] += len(batch)
+
+            if rank == 0:
+                inner_pbar.update(1)
             # pred = output.logits.argmax(
             #    dim=1, keepdim=True
             # )  # get the index of the max log-probability
@@ -238,17 +245,13 @@ def test(model, rank, world_size, test_loader):
             # ddp_loss[2] += len(batch)
 
     dist.reduce(ddp_loss, 0, op=dist.ReduceOp.SUM)
+    val_loss = ddp_loss[0] / ddp_loss[1]
 
     if rank == 0:
-        test_loss = ddp_loss[0] / ddp_loss[1]
-        print(
-            "Test set: Average loss: {:.4f}, Accuracy: {}/{} ({:.2f}%)\n".format(
-                test_loss,
-                int(ddp_loss[0]),
-                int(ddp_loss[1]),
-                100.0 * ddp_loss[0] / ddp_loss[1],
-            )
-        )
+        # test_loss = ddp_loss[0] / ddp_loss[1]
+        inner_pbar.close()
+        print(f"Validation Loss: {val_loss:.4f}")
+    return val_loss
 
 
 # ---- fsdp main ------------------------------------------------------------
@@ -392,6 +395,8 @@ def fsdp_main(rank, world_size, args):
     # --- main training loop - todo, this needs to be modularized
     if rank == 0:
         dur = []
+        train_acc_tracking = []
+        val_acc_tracking = []
         training_start_time = time.time()
 
     torch_profiler = None
@@ -431,13 +436,18 @@ def fsdp_main(rank, world_size, args):
             profiler=torch_profiler,
         )
 
-        test(model, rank, world_size, test_loader)
+        test_accuracy = test(model, rank, world_size, test_loader)
+
         scheduler.step()
+
         if rank == 0:
 
             dur.append(time.time() - t0)
-            mem_alloc_tracker.append(torch.cuda.memory_allocated())
-            mem_reserved_tracker.append(torch.cuda.memory_reserved())
+            train_acc_tracking.append(train_accuracy)
+            val_acc_tracking.append(test_accuracy)
+            if cfg.track_memory:
+                mem_alloc_tracker.append(torch.cuda.memory_allocated())
+                mem_reserved_tracker.append(torch.cuda.memory_reserved())
 
         if cfg.save_model:
             states = model.state_dict()
@@ -455,10 +465,10 @@ def fsdp_main(rank, world_size, args):
                 print(f"--> saved {model_save_name} to disk")
 
             # memory summary
-            if rank == 0:
-                print(
-                    f"CUDA Memory Summary After Whole Training Loop:\n {torch.cuda.memory_summary()}"
-                )
+            # if rank == 0:
+            #    print(
+            #        f"CUDA Memory Summary After Whole Training Loop:\n {torch.cuda.memory_summary()}"
+            #    )
 
     # init_end_event.record()
     if rank == 0:
@@ -474,6 +484,9 @@ def fsdp_main(rank, world_size, args):
         if cfg.track_memory:
             print(f"total memory reserved: {mem_reserved_tracker}")
             print(f"total memory allocated: {mem_alloc_tracker}")
+
+        print(f"Training accuracy: {train_acc_tracking}")
+        print(f"Validation accuracy: {val_acc_tracking}")
 
         # print(
         # f"Cuda event elapsed time: {init_start_event.elapsed_time(init_end_event) / 1000}sec"

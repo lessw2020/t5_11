@@ -4,11 +4,11 @@ from dataclasses import dataclass
 @dataclass
 class train_config:
     # general
-    host_port: str = "12399"
+    host_port: str = "12369"
 
     # model
-    model_name = "t5-small"
-    save_model: bool = True
+    model_name = "google/t5-v1_1-small"  # "t5-small"
+    save_model: bool = False
     model_checkpoint = "t5small_2e.pt"
     print_sharding_plan: bool = True
 
