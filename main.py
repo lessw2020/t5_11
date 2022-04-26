@@ -400,6 +400,10 @@ def fsdp_main(rank, world_size, args):
         record_shapes=True,
     ) as torch_profiler:
     """
+    if rank == 0 and cfg.track_memory:
+        fn = cfg.model_name + "memory_tracking.txt"
+        mem_alloc_tracker = []
+        mem_reserved_tracker = []
 
     for epoch in range(1, epochs + 1):
         if rank == 0:
@@ -423,6 +427,8 @@ def fsdp_main(rank, world_size, args):
         if rank == 0:
 
             dur.append(time.time() - t0)
+            mem_alloc_tracker.append(torch.cuda.memory_allocated())
+            mem_reserved_tracker.append(torch.cuda.memory_reserved())
 
         if cfg.save_model:
             states = model.state_dict()
@@ -454,6 +460,11 @@ def fsdp_main(rank, world_size, args):
         for i, val in enumerate(dur):
             print(f"epoch {i}, time {val:.2f}")
         print()
+
+        # memory
+        if cfg.track_memory:
+            print(f"total memory reserved: {mem_reserved_tracker}")
+            print(f"total memory allocated: {mem_alloc_tracker}")
 
         # print(
         # f"Cuda event elapsed time: {init_start_event.elapsed_time(init_end_event) / 1000}sec"

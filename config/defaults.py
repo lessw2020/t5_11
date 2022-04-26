@@ -21,5 +21,8 @@ class train_config:
     dataset_test = "datasets_grammar/grammar_validation.csv"
 
     # training
-    batch_size: int = 16
-    num_epochs: int = 2
+    batch_size: int = 32
+    num_epochs: int = 5
+
+    # logging
+    track_memory = True
