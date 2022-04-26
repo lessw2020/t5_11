@@ -230,22 +230,23 @@ def test(model, rank, world_size, test_loader):
                 labels=batch["target_ids"],
             )
             ddp_loss[0] += output["loss"].item()  # sum up batch loss
-            pred = output.logits.argmax(
-                dim=1, keepdim=True
-            )  # get the index of the max log-probability
-            ddp_loss[1] += pred.eq(batch["target_ids"].view_as(pred)).sum().item()
-            ddp_loss[2] += len(batch)
+            ddp_loss[1] += len(batch)
+            # pred = output.logits.argmax(
+            #    dim=1, keepdim=True
+            # )  # get the index of the max log-probability
+            # ddp_loss[1] += pred.eq(batch["target_ids"].view_as(pred)).sum().item()
+            # ddp_loss[2] += len(batch)
 
     dist.reduce(ddp_loss, 0, op=dist.ReduceOp.SUM)
 
     if rank == 0:
-        test_loss = ddp_loss[0] / ddp_loss[2]
+        test_loss = ddp_loss[0] / ddp_loss[1]
         print(
             "Test set: Average loss: {:.4f}, Accuracy: {}/{} ({:.2f}%)\n".format(
                 test_loss,
+                int(ddp_loss[0]),
                 int(ddp_loss[1]),
-                int(ddp_loss[2]),
-                100.0 * ddp_loss[1] / ddp_loss[2],
+                100.0 * ddp_loss[0] / ddp_loss[1],
             )
         )
 
@@ -317,22 +318,26 @@ def fsdp_main(rank, world_size, args):
         print(f"using dataset {train_name}")
     # print("bailing")
 
-    # val_dataset = wikihow(tokenizer, "validation", None, 512, 150, True)
+    val_dataset = dg.get_dataset(tokenizer, cfg.dataset_test, 512, 150, True)
+    if 0 == os.getenv("RANK"):
+        print(f"--> Validatin set len = {len(val_dataset)}")
+        print(f"using dataset {cfg.dataset_test}")
 
     sampler1 = DistributedSampler(
         train_dataset, rank=rank, num_replicas=world_size, shuffle=True
     )
-    # sampler2 = DistributedSampler(val_dataset, rank=rank, num_replicas=world_size)
+    sampler2 = DistributedSampler(val_dataset, rank=rank, num_replicas=world_size)
+
     print(f"batch size = {batch_size}")
 
     train_kwargs = {"batch_size": batch_size, "sampler": sampler1}
-    # test_kwargs = {"batch_size": test_batch_size, "sampler": sampler2}
+    test_kwargs = {"batch_size": test_batch_size, "sampler": sampler2}
     cuda_kwargs = {"num_workers": 2, "pin_memory": True, "shuffle": False}
     train_kwargs.update(cuda_kwargs)
-    # test_kwargs.update(cuda_kwargs)
+    test_kwargs.update(cuda_kwargs)
 
     train_loader = torch.utils.data.DataLoader(train_dataset, **train_kwargs)
-    # test_loader = torch.utils.data.DataLoader(val_dataset, **test_kwargs)
+    test_loader = torch.utils.data.DataLoader(val_dataset, **test_kwargs)
 
     torch.cuda.set_device(rank)
     clear_gpu_cache(rank)
@@ -426,7 +431,7 @@ def fsdp_main(rank, world_size, args):
             profiler=torch_profiler,
         )
 
-        # test(model, rank, world_size, test_loader)
+        test(model, rank, world_size, test_loader)
         scheduler.step()
         if rank == 0:
 
