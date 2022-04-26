@@ -261,8 +261,9 @@ def fsdp_main(rank, world_size, args):
 
     setup_tasks(rank, world_size, cfg)
 
-    fsdp_unit_params = 2000000
+    fsdp_unit_params = cfg.fsdp_unit_size
     batch_size = cfg.batch_size
+
     test_batch_size = 4
 
     mp_policy, wrapping_policy = get_policies(fsdp_unit_params)
@@ -271,8 +272,8 @@ def fsdp_main(rank, world_size, args):
     # print(f"bailing early...remove")
     # return
 
-    model_name = "t5-large"  # "google/t5-v1_1-small"  #   #
-    save_name = "t5large-"
+    model_name = cfg.model_name  # "google/t5-v1_1-small"  #   #
+    save_name = model_name + "-"
     printable_model_name = str.replace(model_name, "/", "==")
     # t5-base
     # google/t5-v1_1-small
