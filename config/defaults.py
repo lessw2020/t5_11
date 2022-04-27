@@ -4,12 +4,12 @@ from dataclasses import dataclass
 @dataclass
 class train_config:
     # general
-    host_port: str = "12369"
+    host_port: str = "12368"
 
     # model
-    model_name = "google/t5-v1_1-small"  # "t5-small"
-    save_model: bool = False
-    model_checkpoint = "t5small_2e.pt"
+    model_name = "t5-small"  # "google/t5-v1_1-small"  #
+    save_model: bool = True
+    model_checkpoint = "t5small_2cpu.pt"
     print_sharding_plan: bool = True
 
     # policies
@@ -23,7 +23,7 @@ class train_config:
 
     # training
     batch_size: int = 8
-    num_epochs: int = 2
+    num_epochs: int = 1
 
     # logging
     track_memory = True

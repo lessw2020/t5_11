@@ -1,11 +1,11 @@
 import torch
 
 from torch.distributed.fsdp import (
-    FullyShardedDataParallel as FSDP,
-    CPUOffload,
+    # FullyShardedDataParallel as FSDP,
+    # CPUOffload,
     MixedPrecision,
-    BackwardPrefetch,
-    ShardingStrategy,
+    # BackwardPrefetch,
+    # ShardingStrategy,
 )
 
 #

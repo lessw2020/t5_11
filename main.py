@@ -3,12 +3,13 @@
 import os
 import argparse
 from datasets_grammar.grammar_dataset import grammar
-from policies import mixed_precision
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-from torchvision import datasets, transforms
+
+# from torchvision import datasets, transforms
 
 
 # for grammar correction
@@ -32,12 +33,18 @@ from torch.distributed.fsdp import (
     MixedPrecision,
     BackwardPrefetch,
     ShardingStrategy,
+    FullStateDictConfig,
+    StateDictType,
 )
+
+
 from torch.distributed.fsdp.wrap import (
     default_auto_wrap_policy,
     enable_wrap,
     wrap,
 )
+
+from policies import mixed_precision
 
 from datasets import load_dataset, load_metric
 from torch.utils.data import DataLoader
@@ -444,13 +451,17 @@ def fsdp_main(rank, world_size, args):
 
             dur.append(time.time() - t0)
             train_acc_tracking.append(train_accuracy)
+            print(f"train_accuracy_type = {train_accuracy}")
             val_acc_tracking.append(test_accuracy)
             if cfg.track_memory:
                 mem_alloc_tracker.append(torch.cuda.memory_allocated())
                 mem_reserved_tracker.append(torch.cuda.memory_reserved())
 
         if cfg.save_model:
-            states = model.state_dict()
+            cfg = FullStateDictConfig(offload_to_cpu=True, rank0_only=True)
+            with FSDP.state_dict_type(model, StateDictType.FULL_STATE_DICT, cfg):
+                cpu_state = model.state_dict()
+            # states = model.state_dict()
             print(f"rank {rank}  done w state_dict")
             # dist.barrier()
             # print(f"rank {rank}  done w 2nd barrier")
@@ -460,7 +471,7 @@ def fsdp_main(rank, world_size, args):
                 currEpoch = "-" + str(epoch) + "-train.pt"
                 model_save_name = save_name + currEpoch
 
-                torch.save(states, model_save_name)
+                torch.save(cpu_state, model_save_name)
 
                 print(f"--> saved {model_save_name} to disk")
 
