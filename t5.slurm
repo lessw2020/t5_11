@@ -15,6 +15,9 @@ head_node_ip=$(srun --nodes=1 --ntasks=1 -w "$head_node" hostname --ip-address)
 
 echo Node IP: $head_node_ip
 export LOGLEVEL=INFO
+# Enable for A100
+#export FI_PROVIDER="efa"
+
 
 # debugging flags (optional)
 export NCCL_DEBUG=INFO
