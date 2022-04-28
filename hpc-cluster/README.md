@@ -14,6 +14,15 @@
   ```bash
   python3 -m pip install --upgrade "aws-parallelcluster"
   ```
+  
+* make sure node is installed
+```bash
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.38.0/install.sh | bash
+chmod ug+x ~/.nvm/nvm.sh
+source ~/.nvm/nvm.sh
+nvm install --lts
+node --version
+```
 
 ## Create s3 bucket
 
