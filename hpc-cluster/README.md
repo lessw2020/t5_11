@@ -189,7 +189,10 @@ docker-compose --env-file /etc/parallelcluster/cfnconfig -f ~/aws-parallelcluste
 ```bash
 sbatch t5.slurm
 ```
-
+it outputs the job id and a log file which is 
+```
+slurm-jobid.out
+```
 ## For Standalone DCGM Exported
 
 Import the below dashboard into grafana
