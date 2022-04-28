@@ -164,7 +164,6 @@ chmod +x job_*
 #install torch nightlies
 pip3 install --pre torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/nightly/cu113
 pip install -r requirements.txt
-modify the bert.slurm to https://gist.github.com/HamidShojanazeri/145413925b98506b81541f6a5e86a3d0
  
 ```
 
@@ -188,7 +187,7 @@ docker-compose --env-file /etc/parallelcluster/cfnconfig -f ~/aws-parallelcluste
 (base) [ec2-user@ip-10-0-38-178 t5_11]$ pwd
 /lustre/t5_11
 ```bash
-sbatch bert.slurm
+sbatch t5.slurm
 ```
 
 ## For Standalone DCGM Exported
