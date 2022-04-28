@@ -154,14 +154,13 @@ Output
 pcluster ssh --cluster-name cluster -i your-key_pair
 cd /lustre
 chmod +x compute-post-install.sh head-post-install.sh
-#once cloned the uber-profile in the training-job
-git clone https://github.com/chauhang/uber-prof.git
+
 git clone https://github.com/lessw2020/t5_11.git
-cd uber-prof/training-job/
-chmod +x job_*
-cp bert.slurm job_epilog.sh job_prolog.sh  utils.py environment.yml install_PT1.10_from_src.sh test_error_injection.py ../../t5_11/
-cd -
+
 cd t5_11
+
+chmod +x job_*
+
 #install torch nightlies
 pip3 install --pre torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/nightly/cu113
 pip install -r requirements.txt
