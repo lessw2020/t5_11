@@ -12,7 +12,7 @@
 * Install aws parallel cluster cli
 
   ```bash
-  pip3 install "aws-parallelcluster" --upgrade --user
+  python3 -m pip install --upgrade "aws-parallelcluster"
   ```
 
 ## Create s3 bucket
