@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH --job-name=charnn-trainer
+#SBATCH --job-name=T5-trainer
 
 #SBATCH --ntasks=3
 
