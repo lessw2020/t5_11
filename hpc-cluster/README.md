@@ -190,8 +190,23 @@ docker-compose --env-file /etc/parallelcluster/cfnconfig -f ~/aws-parallelcluste
 sbatch t5.slurm
 ```
 it outputs the job id and a log file which is 
+
 ```
 slurm-jobid.out
+
+```
+## Check and Cancel the job
+```
+squeue
+
+scancel job-id
+
+```
+Check the cluster actual offerings
+
+```
+sinfo
+
 ```
 ## For Standalone DCGM Exported
 
