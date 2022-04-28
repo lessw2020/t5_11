@@ -10,7 +10,7 @@ HeadNode:
       - Policy: arn:aws:iam::aws:policy/AWSPriceListServiceFullAccess
       - Policy: arn:aws:iam::aws:policy/AmazonSSMFullAccess
       - Policy: arn:aws:iam::aws:policy/AWSCloudFormationReadOnlyAccess
-      # Add below policy for capacity reservation
+      # Add below policy for capacity reservation for A100
       # - Policy: arn:aws:iam::320567679581:policy/RunInstancesInCapacityReservation
     S3Access:
       - BucketName: fsdp-expeirments
