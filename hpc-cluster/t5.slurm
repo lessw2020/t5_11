@@ -24,6 +24,10 @@ export PYTHONFAULTHANDLER=1
 export LD_LIBRARY_PATH=/opt/amazon/efa/lib:$LD_LIBRARY_PATH
 export LD_LIBRARY_PATH=/usr/local/lib/:$LD_LIBRARY_PATH
 
+#uncomment for P4dn instances
+
+#export FI_PROVIDER="efa"
+
 # on your cluster you might need these:
 # set the network interface
 export NCCL_SOCKET_IFNAME="en,eth,em,bond"
