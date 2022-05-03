@@ -11,6 +11,9 @@ import torch.optim as optim
 
 # from torchvision import datasets, transforms
 
+import torchdynamo
+from torchdynamo.optimizations.training import aot_autograd_speedup_strategy
+
 
 # for grammar correction
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
@@ -277,7 +280,7 @@ def fsdp_main(rank, world_size, args):
     if rank == 0:
         print(f"--> running with these defaults {cfg}")
 
-    setup_tasks(rank, world_size, cfg)
+    # setup_tasks(rank, world_size, cfg)
 
     fsdp_unit_params = cfg.fsdp_unit_size
     print(f"sharding with {fsdp_unit_params} min_param_size")
@@ -372,19 +375,24 @@ def fsdp_main(rank, world_size, args):
         model.gradient_checkpointing_enable()
         print(f"Activation checkpointing enabled\n")
     print("mixed precision off!!")
+    # ddp
+    model = DDP(model)
 
-    model = FSDP(
+    model.to(rank)
+
+    """model = FSDP(
         model,
         auto_wrap_policy=wrapping_policy,
         backward_prefetch=BackwardPrefetch.BACKWARD_PRE,
         mixed_precision=mp_policy,
     ).to(rank)
+    """
 
     # add in AOT Autograd
-    model = memory_efficient_fusion(model)
-    print(f"Fused model created on rank {rank}")
-    if rank == 0:
-        print(f"aot model = {model}")
+    # model = memory_efficient_fusion(model)
+    # print(f"Fused model created on rank {rank}")
+    # if rank == 0:
+    #    print(f"aot model = {model}")
 
     if rank == 0 and cfg.print_sharding_plan:
         print(f"--> Saving sharding plan for the model ")
@@ -442,7 +450,8 @@ def fsdp_main(rank, world_size, args):
         mem_alloc_tracker = []
         mem_reserved_tracker = []
 
-    with torch.jit.fuser("fuser2"):
+    with torchdynamo.optimize(aot_autograd_speedup_strategy):
+        # with torch.jit.fuser("fuser2"):
         for epoch in range(1, epochs + 1):
             if rank == 0:
                 print(f"\n--> Starting Epoch {epoch}")
@@ -561,7 +570,7 @@ if __name__ == "__main__":
         delimiter=",",
     )
     print(f"temp dset loaded in main = len {len(temp_full_dataset)}")
-    """
+    
 
     mp.spawn(
         fsdp_main,
@@ -572,3 +581,5 @@ if __name__ == "__main__":
         nprocs=gpus_per_node,
         join=True,
     )
+    """
+    fsdp_main(0, 0, args)
