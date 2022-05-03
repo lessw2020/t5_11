@@ -115,8 +115,8 @@ def get_policies(cfg, fsdp_unit_params=1000000):
             mixed_precision_policy = policies.bfSixteen
             print(f"bFloat16 enabled for mixed precision - using bfSixteen policy")
         else:
-            mixed_precision_policy = policies.fpSixteen
-            print(f"bFloat16 support not present. Using fp16 for mixed precision")
+            # mixed_precision_policy = policies.fpSixteen
+            print(f"bFloat16 support not present. Not using for mixed precision")
 
     # wrapping policy -------
     # print(f"**overriding mp to fp16 - remove")
@@ -224,7 +224,7 @@ def train(
 # ---- Validation ---------------
 
 
-def test(model, rank, world_size, test_loader):
+def validation(model, rank, world_size, test_loader):
     model.eval()
     correct = 0
     ddp_loss = torch.zeros(3).to(rank)
@@ -362,9 +362,11 @@ def fsdp_main(rank, world_size, args):
 
     model = FSDP(
         model,
-        # auto_wrap_policy=wrapping_policy,
-        # mixed_precision=mp_policy,
-    ).to(rank)
+        auto_wrap_policy=wrapping_policy,
+        mixed_precision=mp_policy,
+    )
+    # move model to gpu
+    model.to(rank)
 
     if rank == 0 and cfg.print_sharding_plan:
         print(f"model ")
@@ -441,17 +443,18 @@ def fsdp_main(rank, world_size, args):
         )
 
         if cfg.run_validation:
-            test_accuracy = test(model, rank, world_size, test_loader)
+            test_accuracy = validation(model, rank, world_size, test_loader)
 
         scheduler.step()
 
         if rank == 0:
 
             dur.append(time.time() - t0)
-            train_acc_tracking.append(train_accuracy)
-            print(f"train_accuracy_type = {train_accuracy}")
+            train_acc_tracking.append(train_accuracy.item())
+
             if cfg.run_validation:
-                val_acc_tracking.append(test_accuracy)
+                val_acc_tracking.append(test_accuracy.item())
+
             if cfg.track_memory:
                 mem_alloc_tracker.append(torch.cuda.memory_allocated())
                 mem_reserved_tracker.append(torch.cuda.memory_reserved())
@@ -463,7 +466,7 @@ def fsdp_main(rank, world_size, args):
             ):
                 cpu_state = model.state_dict()
             # states = model.state_dict()
-            print(f"rank {rank}  done w state_dict")
+            print(f"saving process: rank {rank}  done w state_dict")
             # dist.barrier()
             # print(f"rank {rank}  done w 2nd barrier")
 
@@ -475,12 +478,6 @@ def fsdp_main(rank, world_size, args):
                 torch.save(cpu_state, model_save_name)
 
                 print(f"--> saved {model_save_name} to disk")
-
-            # memory summary
-            # if rank == 0:
-            #    print(
-            #        f"CUDA Memory Summary After Whole Training Loop:\n {torch.cuda.memory_summary()}"
-            #    )
 
     # init_end_event.record()
     if rank == 0:
@@ -501,6 +498,11 @@ def fsdp_main(rank, world_size, args):
         if cfg.run_validation:
             print(f"Validation accuracy: {val_acc_tracking}")
 
+        # memory summary
+        if cfg.memory_report and rank == 0:
+            print(
+                f"CUDA Memory Summary After Last training:\n {torch.cuda.memory_summary()}"
+            )
         # print(
         # f"Cuda event elapsed time: {init_start_event.elapsed_time(init_end_event) / 1000}sec"
         # )

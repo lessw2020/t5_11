@@ -5,6 +5,7 @@
 
 *.pt
 *.pyc
+
 datasets_grammar/__pycache__/__init__.cpython-38.pyc
 datasets_grammar/__pycache__/grammar_dataset.cpython-38.pyc
 policies/__pycache__/__init__.cpython-38.pyc

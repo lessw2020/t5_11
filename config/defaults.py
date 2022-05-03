@@ -26,8 +26,9 @@ class train_config:
     num_epochs: int = 1
 
     # validation
-    run_validation: bool = False
+    run_validation: bool = True
     val_batch_size = 4
 
     # logging
     track_memory = True
+    memory_report: bool = True
