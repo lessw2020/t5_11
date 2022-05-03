@@ -128,11 +128,11 @@ def get_policies(cfg, fsdp_unit_params=1000000):
 
 
 def setup(rank, world_size, cfg):
-    os.environ["MASTER_ADDR"] = g_addr
-    os.environ["MASTER_PORT"] = cfg.host_port
+    # os.environ["MASTER_ADDR"] = g_addr
+    # os.environ["MASTER_PORT"] = cfg.host_port
 
     # initialize the process group
-    dist.init_process_group("nccl", rank=rank, world_size=world_size)
+    dist.init_process_group("nccl")  # , rank=rank, world_size=world_size)
 
 
 def setup_environ_flags():
@@ -265,7 +265,7 @@ def validation(model, local_rank, world_size, test_loader):
 # ---- fsdp main ------------------------------------------------------------
 
 
-def fsdp_main(rank, world_size, args):
+def fsdp_main(args):
     """main process within each process"""
     cfg = config.train_config()  # loads from defaults
 
