@@ -50,8 +50,9 @@ from datasets import load_dataset, load_metric
 from torch.utils.data import DataLoader
 from pathlib import Path
 from torch.utils.data import DataLoader
-from nlp import load_metric
-from nlp import load_dataset
+
+# from nlp import load_metric
+# from nlp import load_dataset
 
 from sklearn.model_selection import train_test_split
 import time
@@ -278,13 +279,9 @@ def fsdp_main(rank, world_size, args):
     if rank == 0:
         print(f"\n BatchSize = {batch_size}\n")
 
-    test_batch_size = 4
+    val_batch_size = cfg.val_batch_size
 
     mp_policy, wrapping_policy = get_policies(cfg, fsdp_unit_params)
-
-    # temp_train()
-    # print(f"bailing early...remove")
-    # return
 
     model_name = cfg.model_name  # "google/t5-v1_1-small"  #   #
     save_name = model_name + "-"
@@ -324,13 +321,13 @@ def fsdp_main(rank, world_size, args):
 
     train_dataset = dg.get_dataset(tokenizer, train_name, 512, 512, True)
     if 0 == os.getenv("RANK"):
-        print(len(train_dataset))
+        print(f"--> Training Set Len = {len(train_dataset)}")
         print(f"using dataset {train_name}")
     # print("bailing")
 
     val_dataset = dg.get_dataset(tokenizer, cfg.dataset_test, 512, 150, True)
     if 0 == os.getenv("RANK"):
-        print(f"--> Validatin set len = {len(val_dataset)}")
+        print(f"--> Validation set len = {len(val_dataset)}")
         print(f"using dataset {cfg.dataset_test}")
 
     sampler1 = DistributedSampler(
@@ -341,7 +338,7 @@ def fsdp_main(rank, world_size, args):
     print(f"batch size = {batch_size}")
 
     train_kwargs = {"batch_size": batch_size, "sampler": sampler1}
-    test_kwargs = {"batch_size": test_batch_size, "sampler": sampler2}
+    test_kwargs = {"batch_size": val_batch_size, "sampler": sampler2}
     cuda_kwargs = {"num_workers": 2, "pin_memory": True, "shuffle": False}
     train_kwargs.update(cuda_kwargs)
     test_kwargs.update(cuda_kwargs)
@@ -362,7 +359,6 @@ def fsdp_main(rank, world_size, args):
     if cfg.activation_checkpointing:
         model.gradient_checkpointing_enable()
         print(f"Activation checkpointing enabled\n")
-    print("mixed precision off!!")
 
     model = FSDP(
         model,
@@ -397,7 +393,8 @@ def fsdp_main(rank, world_size, args):
     if rank == 0:
         print(f"Training for {epochs} epochs")
 
-    best_train_accuracy = float("inf")
+    best_train_accuracy = float("-inf")
+    test_accuracy = float("-inf")
 
     # --- main training loop - todo, this needs to be modularized
     if rank == 0:
@@ -443,7 +440,8 @@ def fsdp_main(rank, world_size, args):
             profiler=torch_profiler,
         )
 
-        test_accuracy = test(model, rank, world_size, test_loader)
+        if cfg.run_validation:
+            test_accuracy = test(model, rank, world_size, test_loader)
 
         scheduler.step()
 
@@ -452,14 +450,17 @@ def fsdp_main(rank, world_size, args):
             dur.append(time.time() - t0)
             train_acc_tracking.append(train_accuracy)
             print(f"train_accuracy_type = {train_accuracy}")
-            val_acc_tracking.append(test_accuracy)
+            if cfg.run_validation:
+                val_acc_tracking.append(test_accuracy)
             if cfg.track_memory:
                 mem_alloc_tracker.append(torch.cuda.memory_allocated())
                 mem_reserved_tracker.append(torch.cuda.memory_reserved())
 
         if cfg.save_model:
-            cfg = FullStateDictConfig(offload_to_cpu=True, rank0_only=True)
-            with FSDP.state_dict_type(model, StateDictType.FULL_STATE_DICT, cfg):
+            save_policy = FullStateDictConfig(offload_to_cpu=True, rank0_only=True)
+            with FSDP.state_dict_type(
+                model, StateDictType.FULL_STATE_DICT, save_policy
+            ):
                 cpu_state = model.state_dict()
             # states = model.state_dict()
             print(f"rank {rank}  done w state_dict")
@@ -497,7 +498,8 @@ def fsdp_main(rank, world_size, args):
             print(f"total memory allocated: {mem_alloc_tracker}")
 
         print(f"Training accuracy: {train_acc_tracking}")
-        print(f"Validation accuracy: {val_acc_tracking}")
+        if cfg.run_validation:
+            print(f"Validation accuracy: {val_acc_tracking}")
 
         # print(
         # f"Cuda event elapsed time: {init_start_event.elapsed_time(init_end_event) / 1000}sec"
