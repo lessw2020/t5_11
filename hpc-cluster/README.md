@@ -136,8 +136,8 @@ Add the policy from [here](https://us-east-1.console.aws.amazon.com/iamv2/home#/
             "Effect": "Allow",
             "Action": "ec2:RunInstances",
             "Resource": [
-                "arn:aws:ec2:ap-northeast-2:320567679581:capacity-reservation/*",
-                "arn:aws:resource-groups:ap-northeast-2:320567679581:group/*"
+                "arn:aws:ec2:ap-northeast-2:<AccountId>:capacity-reservation/*",
+                "arn:aws:resource-groups:ap-northeast-2:<AccountId>:group/*"
             ]
         }
     ]
@@ -152,7 +152,7 @@ HeadNode:
   Iam:
     AdditionalIamPolicies:
     
-      - Policy: arn:aws:iam::320567679581:policy/RunInstancesInCapacityReservation
+      - Policy: arn:aws:iam::<AccountId>:policy/RunInstancesInCapacityReservation
 ```
 
 ### Modify the cluster.yaml to suit your requirement
