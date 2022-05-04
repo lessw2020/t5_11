@@ -124,6 +124,8 @@ Upload the built package from `_out` folder to a s3 bucket and update the url in
 
 Make sure you have created "RunInstancesInCapacityReservation" ploicy if you are using resevred instances as follows:
 
+Add the policy from [here](https://us-east-1.console.aws.amazon.com/iamv2/home#/policies)
+
 ```json
 
 {
@@ -141,6 +143,16 @@ Make sure you have created "RunInstancesInCapacityReservation" ploicy if you are
     ]
 }
 
+```
+in the cluster.yaml make sure to add 
+
+```
+HeadNode:
+  InstanceType: c5.2xlarge
+  Iam:
+    AdditionalIamPolicies:
+    
+      - Policy: arn:aws:iam::320567679581:policy/RunInstancesInCapacityReservation
 ```
 
 ### Modify the cluster.yaml to suit your requirement
