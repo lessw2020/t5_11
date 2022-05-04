@@ -108,6 +108,8 @@ Scheduling:
 aws ec2 create-key-pair --key-name hpc-key --query KeyMaterial --output text > ~/.ssh/hpc-key
 chmod 600 ~/.ssh/hpc-key
 ```
+**Make sure to add your key to  ~/.ssh/**
+
 
 ## Build dcgm
 
@@ -119,6 +121,27 @@ chmod +x dcgm-build.sh
 Upload the built package from `_out` folder to a s3 bucket and update the url in `compute-post-install.sh` script.
 
 ## Edit cluster config yaml
+
+Make sure you have created "RunInstancesInCapacityReservation" ploicy if you are using resevred instances as follows:
+
+```json
+
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "RunInstancesInCapacityReservation",
+            "Effect": "Allow",
+            "Action": "ec2:RunInstances",
+            "Resource": [
+                "arn:aws:ec2:ap-northeast-2:320567679581:capacity-reservation/*",
+                "arn:aws:resource-groups:ap-northeast-2:320567679581:group/*"
+            ]
+        }
+    ]
+}
+
+```
 
 ### Modify the cluster.yaml to suit your requirement
 
