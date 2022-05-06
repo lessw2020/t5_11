@@ -516,7 +516,7 @@ def fsdp_main(args):
         print(f"Training accuracy: {train_acc_tracking}")
         if cfg.run_validation:
             print(f"Validation accuracy: {val_acc_tracking}")
-            print(f"\n Best Val accuracy: {best_val_accuracy}")
+            print(f"\n Best Val accuracy: {best_val_loss}")
 
         # memory summary
         if cfg.memory_report and rank == 0:
