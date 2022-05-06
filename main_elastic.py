@@ -289,8 +289,10 @@ def fsdp_main(args):
     mp_policy, wrapping_policy = get_policies(cfg, fsdp_unit_params)
 
     model_name = cfg.model_name  # "google/t5-v1_1-small"  #   #
-    save_name = model_name + "-"
+    
     printable_model_name = str.replace(model_name, "/", "==")
+    save_name = printable_model_name + "-"
+
     # t5-base
     # google/t5-v1_1-small
     # google/t5-v1_1-base
@@ -401,7 +403,8 @@ def fsdp_main(args):
         print(f"Training for {epochs} epochs")
 
     best_train_accuracy = float("-inf")
-    test_accuracy = float("-inf")
+    best_val_loss = float("inf")
+    curr_val_loss = float("inf")
 
     # --- main training loop - todo, this needs to be modularized
     if rank == 0:
@@ -448,23 +451,29 @@ def fsdp_main(args):
         )
 
         if cfg.run_validation:
-            test_accuracy = validation(model, local_rank, world_size, test_loader)
+            curr_val_loss = validation(model, local_rank, world_size, test_loader)
 
         scheduler.step()
-
+        
         if rank == 0:
+            print(f"--> epoch {epoch} completed...entering save and stats zone")
 
             dur.append(time.time() - t0)
             train_acc_tracking.append(train_accuracy.item())
 
             if cfg.run_validation:
-                val_acc_tracking.append(test_accuracy.item())
+                val_acc_tracking.append(curr_val_loss.item())
 
             if cfg.track_memory:
                 mem_alloc_tracker.append(torch.cuda.memory_allocated())
                 mem_reserved_tracker.append(torch.cuda.memory_reserved())
 
-        if cfg.save_model:
+        if cfg.save_model and curr_val_loss < best_val_loss:
+            # update curr best val accuracy
+            
+            # save
+            if rank==0:
+                print(f"--> entering save model state...")
             save_policy = FullStateDictConfig(offload_to_cpu=True, rank0_only=True)
             with FSDP.state_dict_type(
                 model, StateDictType.FULL_STATE_DICT, save_policy
@@ -477,12 +486,17 @@ def fsdp_main(args):
 
             if rank == 0:
                 print(f"--> saving model ...")
-                currEpoch = "-" + str(epoch) + "-train.pt"
+                currEpoch = "-" +str(epoch)+"-"+ str(round(curr_val_loss.item(),4)) + ".pt"
                 model_save_name = save_name + currEpoch
 
                 torch.save(cpu_state, model_save_name)
 
                 print(f"--> saved {model_save_name} to disk")
+        # announce new val loss record:
+        if rank==0 and curr_val_loss < best_val_loss:
+
+             best_val_loss = curr_val_loss
+             print(f"-->>>> New Val Loss Record: {best_val_loss}")
 
     # init_end_event.record()
     if rank == 0:
@@ -502,6 +516,7 @@ def fsdp_main(args):
         print(f"Training accuracy: {train_acc_tracking}")
         if cfg.run_validation:
             print(f"Validation accuracy: {val_acc_tracking}")
+            print(f"\n Best Val accuracy: {best_val_accuracy}")
 
         # memory summary
         if cfg.memory_report and rank == 0:

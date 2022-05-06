@@ -1,0 +1,1568 @@
+model = t5-large, sharded with 2000000 parameters
+
+
+--> t5-large has 368.834048 Million params
+
+model wrapping = 
+FullyShardedDataParallel(
+  (_fsdp_wrapped_module): FlattenParamsWrapper(
+    (_fpw_module): T5ForConditionalGeneration(
+      (shared): Embedding(32128, 1024)
+      (encoder): T5Stack(
+        (embed_tokens): Embedding(32128, 1024)
+        (block): ModuleList(
+          (0): FullyShardedDataParallel(
+            (_fsdp_wrapped_module): FlattenParamsWrapper(
+              (_fpw_module): T5Block(
+                (layer): ModuleList(
+                  (0): T5LayerSelfAttention(
+                    (SelfAttention): T5Attention(
+                      (q): Linear(in_features=1024, out_features=1024, bias=False)
+                      (k): Linear(in_features=1024, out_features=1024, bias=False)
+                      (v): Linear(in_features=1024, out_features=1024, bias=False)
+                      (o): Linear(in_features=1024, out_features=1024, bias=False)
+                      (relative_attention_bias): Embedding(32, 16)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                  (1): T5LayerFF(
+                    (DenseReluDense): T5DenseReluDense(
+                      (wi): Linear(in_features=1024, out_features=4096, bias=False)
+                      (wo): Linear(in_features=4096, out_features=1024, bias=False)
+                      (dropout): Dropout(p=0.1, inplace=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                )
+              )
+            )
+          )
+          (1): FullyShardedDataParallel(
+            (_fsdp_wrapped_module): FlattenParamsWrapper(
+              (_fpw_module): T5Block(
+                (layer): ModuleList(
+                  (0): T5LayerSelfAttention(
+                    (SelfAttention): T5Attention(
+                      (q): Linear(in_features=1024, out_features=1024, bias=False)
+                      (k): Linear(in_features=1024, out_features=1024, bias=False)
+                      (v): Linear(in_features=1024, out_features=1024, bias=False)
+                      (o): Linear(in_features=1024, out_features=1024, bias=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                  (1): T5LayerFF(
+                    (DenseReluDense): T5DenseReluDense(
+                      (wi): Linear(in_features=1024, out_features=4096, bias=False)
+                      (wo): Linear(in_features=4096, out_features=1024, bias=False)
+                      (dropout): Dropout(p=0.1, inplace=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                )
+              )
+            )
+          )
+          (2): FullyShardedDataParallel(
+            (_fsdp_wrapped_module): FlattenParamsWrapper(
+              (_fpw_module): T5Block(
+                (layer): ModuleList(
+                  (0): T5LayerSelfAttention(
+                    (SelfAttention): T5Attention(
+                      (q): Linear(in_features=1024, out_features=1024, bias=False)
+                      (k): Linear(in_features=1024, out_features=1024, bias=False)
+                      (v): Linear(in_features=1024, out_features=1024, bias=False)
+                      (o): Linear(in_features=1024, out_features=1024, bias=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                  (1): T5LayerFF(
+                    (DenseReluDense): T5DenseReluDense(
+                      (wi): Linear(in_features=1024, out_features=4096, bias=False)
+                      (wo): Linear(in_features=4096, out_features=1024, bias=False)
+                      (dropout): Dropout(p=0.1, inplace=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                )
+              )
+            )
+          )
+          (3): FullyShardedDataParallel(
+            (_fsdp_wrapped_module): FlattenParamsWrapper(
+              (_fpw_module): T5Block(
+                (layer): ModuleList(
+                  (0): T5LayerSelfAttention(
+                    (SelfAttention): T5Attention(
+                      (q): Linear(in_features=1024, out_features=1024, bias=False)
+                      (k): Linear(in_features=1024, out_features=1024, bias=False)
+                      (v): Linear(in_features=1024, out_features=1024, bias=False)
+                      (o): Linear(in_features=1024, out_features=1024, bias=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                  (1): T5LayerFF(
+                    (DenseReluDense): T5DenseReluDense(
+                      (wi): Linear(in_features=1024, out_features=4096, bias=False)
+                      (wo): Linear(in_features=4096, out_features=1024, bias=False)
+                      (dropout): Dropout(p=0.1, inplace=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                )
+              )
+            )
+          )
+          (4): FullyShardedDataParallel(
+            (_fsdp_wrapped_module): FlattenParamsWrapper(
+              (_fpw_module): T5Block(
+                (layer): ModuleList(
+                  (0): T5LayerSelfAttention(
+                    (SelfAttention): T5Attention(
+                      (q): Linear(in_features=1024, out_features=1024, bias=False)
+                      (k): Linear(in_features=1024, out_features=1024, bias=False)
+                      (v): Linear(in_features=1024, out_features=1024, bias=False)
+                      (o): Linear(in_features=1024, out_features=1024, bias=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                  (1): T5LayerFF(
+                    (DenseReluDense): T5DenseReluDense(
+                      (wi): Linear(in_features=1024, out_features=4096, bias=False)
+                      (wo): Linear(in_features=4096, out_features=1024, bias=False)
+                      (dropout): Dropout(p=0.1, inplace=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                )
+              )
+            )
+          )
+          (5): FullyShardedDataParallel(
+            (_fsdp_wrapped_module): FlattenParamsWrapper(
+              (_fpw_module): T5Block(
+                (layer): ModuleList(
+                  (0): T5LayerSelfAttention(
+                    (SelfAttention): T5Attention(
+                      (q): Linear(in_features=1024, out_features=1024, bias=False)
+                      (k): Linear(in_features=1024, out_features=1024, bias=False)
+                      (v): Linear(in_features=1024, out_features=1024, bias=False)
+                      (o): Linear(in_features=1024, out_features=1024, bias=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                  (1): T5LayerFF(
+                    (DenseReluDense): T5DenseReluDense(
+                      (wi): Linear(in_features=1024, out_features=4096, bias=False)
+                      (wo): Linear(in_features=4096, out_features=1024, bias=False)
+                      (dropout): Dropout(p=0.1, inplace=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                )
+              )
+            )
+          )
+          (6): FullyShardedDataParallel(
+            (_fsdp_wrapped_module): FlattenParamsWrapper(
+              (_fpw_module): T5Block(
+                (layer): ModuleList(
+                  (0): T5LayerSelfAttention(
+                    (SelfAttention): T5Attention(
+                      (q): Linear(in_features=1024, out_features=1024, bias=False)
+                      (k): Linear(in_features=1024, out_features=1024, bias=False)
+                      (v): Linear(in_features=1024, out_features=1024, bias=False)
+                      (o): Linear(in_features=1024, out_features=1024, bias=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                  (1): T5LayerFF(
+                    (DenseReluDense): T5DenseReluDense(
+                      (wi): Linear(in_features=1024, out_features=4096, bias=False)
+                      (wo): Linear(in_features=4096, out_features=1024, bias=False)
+                      (dropout): Dropout(p=0.1, inplace=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                )
+              )
+            )
+          )
+          (7): FullyShardedDataParallel(
+            (_fsdp_wrapped_module): FlattenParamsWrapper(
+              (_fpw_module): T5Block(
+                (layer): ModuleList(
+                  (0): T5LayerSelfAttention(
+                    (SelfAttention): T5Attention(
+                      (q): Linear(in_features=1024, out_features=1024, bias=False)
+                      (k): Linear(in_features=1024, out_features=1024, bias=False)
+                      (v): Linear(in_features=1024, out_features=1024, bias=False)
+                      (o): Linear(in_features=1024, out_features=1024, bias=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                  (1): T5LayerFF(
+                    (DenseReluDense): T5DenseReluDense(
+                      (wi): Linear(in_features=1024, out_features=4096, bias=False)
+                      (wo): Linear(in_features=4096, out_features=1024, bias=False)
+                      (dropout): Dropout(p=0.1, inplace=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                )
+              )
+            )
+          )
+          (8): FullyShardedDataParallel(
+            (_fsdp_wrapped_module): FlattenParamsWrapper(
+              (_fpw_module): T5Block(
+                (layer): ModuleList(
+                  (0): T5LayerSelfAttention(
+                    (SelfAttention): T5Attention(
+                      (q): Linear(in_features=1024, out_features=1024, bias=False)
+                      (k): Linear(in_features=1024, out_features=1024, bias=False)
+                      (v): Linear(in_features=1024, out_features=1024, bias=False)
+                      (o): Linear(in_features=1024, out_features=1024, bias=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                  (1): T5LayerFF(
+                    (DenseReluDense): T5DenseReluDense(
+                      (wi): Linear(in_features=1024, out_features=4096, bias=False)
+                      (wo): Linear(in_features=4096, out_features=1024, bias=False)
+                      (dropout): Dropout(p=0.1, inplace=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                )
+              )
+            )
+          )
+          (9): FullyShardedDataParallel(
+            (_fsdp_wrapped_module): FlattenParamsWrapper(
+              (_fpw_module): T5Block(
+                (layer): ModuleList(
+                  (0): T5LayerSelfAttention(
+                    (SelfAttention): T5Attention(
+                      (q): Linear(in_features=1024, out_features=1024, bias=False)
+                      (k): Linear(in_features=1024, out_features=1024, bias=False)
+                      (v): Linear(in_features=1024, out_features=1024, bias=False)
+                      (o): Linear(in_features=1024, out_features=1024, bias=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                  (1): T5LayerFF(
+                    (DenseReluDense): T5DenseReluDense(
+                      (wi): Linear(in_features=1024, out_features=4096, bias=False)
+                      (wo): Linear(in_features=4096, out_features=1024, bias=False)
+                      (dropout): Dropout(p=0.1, inplace=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                )
+              )
+            )
+          )
+          (10): FullyShardedDataParallel(
+            (_fsdp_wrapped_module): FlattenParamsWrapper(
+              (_fpw_module): T5Block(
+                (layer): ModuleList(
+                  (0): T5LayerSelfAttention(
+                    (SelfAttention): T5Attention(
+                      (q): Linear(in_features=1024, out_features=1024, bias=False)
+                      (k): Linear(in_features=1024, out_features=1024, bias=False)
+                      (v): Linear(in_features=1024, out_features=1024, bias=False)
+                      (o): Linear(in_features=1024, out_features=1024, bias=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                  (1): T5LayerFF(
+                    (DenseReluDense): T5DenseReluDense(
+                      (wi): Linear(in_features=1024, out_features=4096, bias=False)
+                      (wo): Linear(in_features=4096, out_features=1024, bias=False)
+                      (dropout): Dropout(p=0.1, inplace=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                )
+              )
+            )
+          )
+          (11): FullyShardedDataParallel(
+            (_fsdp_wrapped_module): FlattenParamsWrapper(
+              (_fpw_module): T5Block(
+                (layer): ModuleList(
+                  (0): T5LayerSelfAttention(
+                    (SelfAttention): T5Attention(
+                      (q): Linear(in_features=1024, out_features=1024, bias=False)
+                      (k): Linear(in_features=1024, out_features=1024, bias=False)
+                      (v): Linear(in_features=1024, out_features=1024, bias=False)
+                      (o): Linear(in_features=1024, out_features=1024, bias=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                  (1): T5LayerFF(
+                    (DenseReluDense): T5DenseReluDense(
+                      (wi): Linear(in_features=1024, out_features=4096, bias=False)
+                      (wo): Linear(in_features=4096, out_features=1024, bias=False)
+                      (dropout): Dropout(p=0.1, inplace=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                )
+              )
+            )
+          )
+          (12): FullyShardedDataParallel(
+            (_fsdp_wrapped_module): FlattenParamsWrapper(
+              (_fpw_module): T5Block(
+                (layer): ModuleList(
+                  (0): T5LayerSelfAttention(
+                    (SelfAttention): T5Attention(
+                      (q): Linear(in_features=1024, out_features=1024, bias=False)
+                      (k): Linear(in_features=1024, out_features=1024, bias=False)
+                      (v): Linear(in_features=1024, out_features=1024, bias=False)
+                      (o): Linear(in_features=1024, out_features=1024, bias=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                  (1): T5LayerFF(
+                    (DenseReluDense): T5DenseReluDense(
+                      (wi): Linear(in_features=1024, out_features=4096, bias=False)
+                      (wo): Linear(in_features=4096, out_features=1024, bias=False)
+                      (dropout): Dropout(p=0.1, inplace=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                )
+              )
+            )
+          )
+          (13): FullyShardedDataParallel(
+            (_fsdp_wrapped_module): FlattenParamsWrapper(
+              (_fpw_module): T5Block(
+                (layer): ModuleList(
+                  (0): T5LayerSelfAttention(
+                    (SelfAttention): T5Attention(
+                      (q): Linear(in_features=1024, out_features=1024, bias=False)
+                      (k): Linear(in_features=1024, out_features=1024, bias=False)
+                      (v): Linear(in_features=1024, out_features=1024, bias=False)
+                      (o): Linear(in_features=1024, out_features=1024, bias=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                  (1): T5LayerFF(
+                    (DenseReluDense): T5DenseReluDense(
+                      (wi): Linear(in_features=1024, out_features=4096, bias=False)
+                      (wo): Linear(in_features=4096, out_features=1024, bias=False)
+                      (dropout): Dropout(p=0.1, inplace=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                )
+              )
+            )
+          )
+          (14): FullyShardedDataParallel(
+            (_fsdp_wrapped_module): FlattenParamsWrapper(
+              (_fpw_module): T5Block(
+                (layer): ModuleList(
+                  (0): T5LayerSelfAttention(
+                    (SelfAttention): T5Attention(
+                      (q): Linear(in_features=1024, out_features=1024, bias=False)
+                      (k): Linear(in_features=1024, out_features=1024, bias=False)
+                      (v): Linear(in_features=1024, out_features=1024, bias=False)
+                      (o): Linear(in_features=1024, out_features=1024, bias=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                  (1): T5LayerFF(
+                    (DenseReluDense): T5DenseReluDense(
+                      (wi): Linear(in_features=1024, out_features=4096, bias=False)
+                      (wo): Linear(in_features=4096, out_features=1024, bias=False)
+                      (dropout): Dropout(p=0.1, inplace=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                )
+              )
+            )
+          )
+          (15): FullyShardedDataParallel(
+            (_fsdp_wrapped_module): FlattenParamsWrapper(
+              (_fpw_module): T5Block(
+                (layer): ModuleList(
+                  (0): T5LayerSelfAttention(
+                    (SelfAttention): T5Attention(
+                      (q): Linear(in_features=1024, out_features=1024, bias=False)
+                      (k): Linear(in_features=1024, out_features=1024, bias=False)
+                      (v): Linear(in_features=1024, out_features=1024, bias=False)
+                      (o): Linear(in_features=1024, out_features=1024, bias=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                  (1): T5LayerFF(
+                    (DenseReluDense): T5DenseReluDense(
+                      (wi): Linear(in_features=1024, out_features=4096, bias=False)
+                      (wo): Linear(in_features=4096, out_features=1024, bias=False)
+                      (dropout): Dropout(p=0.1, inplace=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                )
+              )
+            )
+          )
+          (16): FullyShardedDataParallel(
+            (_fsdp_wrapped_module): FlattenParamsWrapper(
+              (_fpw_module): T5Block(
+                (layer): ModuleList(
+                  (0): T5LayerSelfAttention(
+                    (SelfAttention): T5Attention(
+                      (q): Linear(in_features=1024, out_features=1024, bias=False)
+                      (k): Linear(in_features=1024, out_features=1024, bias=False)
+                      (v): Linear(in_features=1024, out_features=1024, bias=False)
+                      (o): Linear(in_features=1024, out_features=1024, bias=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                  (1): T5LayerFF(
+                    (DenseReluDense): T5DenseReluDense(
+                      (wi): Linear(in_features=1024, out_features=4096, bias=False)
+                      (wo): Linear(in_features=4096, out_features=1024, bias=False)
+                      (dropout): Dropout(p=0.1, inplace=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                )
+              )
+            )
+          )
+          (17): FullyShardedDataParallel(
+            (_fsdp_wrapped_module): FlattenParamsWrapper(
+              (_fpw_module): T5Block(
+                (layer): ModuleList(
+                  (0): T5LayerSelfAttention(
+                    (SelfAttention): T5Attention(
+                      (q): Linear(in_features=1024, out_features=1024, bias=False)
+                      (k): Linear(in_features=1024, out_features=1024, bias=False)
+                      (v): Linear(in_features=1024, out_features=1024, bias=False)
+                      (o): Linear(in_features=1024, out_features=1024, bias=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                  (1): T5LayerFF(
+                    (DenseReluDense): T5DenseReluDense(
+                      (wi): Linear(in_features=1024, out_features=4096, bias=False)
+                      (wo): Linear(in_features=4096, out_features=1024, bias=False)
+                      (dropout): Dropout(p=0.1, inplace=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                )
+              )
+            )
+          )
+          (18): FullyShardedDataParallel(
+            (_fsdp_wrapped_module): FlattenParamsWrapper(
+              (_fpw_module): T5Block(
+                (layer): ModuleList(
+                  (0): T5LayerSelfAttention(
+                    (SelfAttention): T5Attention(
+                      (q): Linear(in_features=1024, out_features=1024, bias=False)
+                      (k): Linear(in_features=1024, out_features=1024, bias=False)
+                      (v): Linear(in_features=1024, out_features=1024, bias=False)
+                      (o): Linear(in_features=1024, out_features=1024, bias=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                  (1): T5LayerFF(
+                    (DenseReluDense): T5DenseReluDense(
+                      (wi): Linear(in_features=1024, out_features=4096, bias=False)
+                      (wo): Linear(in_features=4096, out_features=1024, bias=False)
+                      (dropout): Dropout(p=0.1, inplace=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                )
+              )
+            )
+          )
+          (19): FullyShardedDataParallel(
+            (_fsdp_wrapped_module): FlattenParamsWrapper(
+              (_fpw_module): T5Block(
+                (layer): ModuleList(
+                  (0): T5LayerSelfAttention(
+                    (SelfAttention): T5Attention(
+                      (q): Linear(in_features=1024, out_features=1024, bias=False)
+                      (k): Linear(in_features=1024, out_features=1024, bias=False)
+                      (v): Linear(in_features=1024, out_features=1024, bias=False)
+                      (o): Linear(in_features=1024, out_features=1024, bias=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                  (1): T5LayerFF(
+                    (DenseReluDense): T5DenseReluDense(
+                      (wi): Linear(in_features=1024, out_features=4096, bias=False)
+                      (wo): Linear(in_features=4096, out_features=1024, bias=False)
+                      (dropout): Dropout(p=0.1, inplace=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                )
+              )
+            )
+          )
+          (20): FullyShardedDataParallel(
+            (_fsdp_wrapped_module): FlattenParamsWrapper(
+              (_fpw_module): T5Block(
+                (layer): ModuleList(
+                  (0): T5LayerSelfAttention(
+                    (SelfAttention): T5Attention(
+                      (q): Linear(in_features=1024, out_features=1024, bias=False)
+                      (k): Linear(in_features=1024, out_features=1024, bias=False)
+                      (v): Linear(in_features=1024, out_features=1024, bias=False)
+                      (o): Linear(in_features=1024, out_features=1024, bias=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                  (1): T5LayerFF(
+                    (DenseReluDense): T5DenseReluDense(
+                      (wi): Linear(in_features=1024, out_features=4096, bias=False)
+                      (wo): Linear(in_features=4096, out_features=1024, bias=False)
+                      (dropout): Dropout(p=0.1, inplace=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                )
+              )
+            )
+          )
+          (21): FullyShardedDataParallel(
+            (_fsdp_wrapped_module): FlattenParamsWrapper(
+              (_fpw_module): T5Block(
+                (layer): ModuleList(
+                  (0): T5LayerSelfAttention(
+                    (SelfAttention): T5Attention(
+                      (q): Linear(in_features=1024, out_features=1024, bias=False)
+                      (k): Linear(in_features=1024, out_features=1024, bias=False)
+                      (v): Linear(in_features=1024, out_features=1024, bias=False)
+                      (o): Linear(in_features=1024, out_features=1024, bias=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                  (1): T5LayerFF(
+                    (DenseReluDense): T5DenseReluDense(
+                      (wi): Linear(in_features=1024, out_features=4096, bias=False)
+                      (wo): Linear(in_features=4096, out_features=1024, bias=False)
+                      (dropout): Dropout(p=0.1, inplace=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                )
+              )
+            )
+          )
+          (22): FullyShardedDataParallel(
+            (_fsdp_wrapped_module): FlattenParamsWrapper(
+              (_fpw_module): T5Block(
+                (layer): ModuleList(
+                  (0): T5LayerSelfAttention(
+                    (SelfAttention): T5Attention(
+                      (q): Linear(in_features=1024, out_features=1024, bias=False)
+                      (k): Linear(in_features=1024, out_features=1024, bias=False)
+                      (v): Linear(in_features=1024, out_features=1024, bias=False)
+                      (o): Linear(in_features=1024, out_features=1024, bias=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                  (1): T5LayerFF(
+                    (DenseReluDense): T5DenseReluDense(
+                      (wi): Linear(in_features=1024, out_features=4096, bias=False)
+                      (wo): Linear(in_features=4096, out_features=1024, bias=False)
+                      (dropout): Dropout(p=0.1, inplace=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                )
+              )
+            )
+          )
+          (23): FullyShardedDataParallel(
+            (_fsdp_wrapped_module): FlattenParamsWrapper(
+              (_fpw_module): T5Block(
+                (layer): ModuleList(
+                  (0): T5LayerSelfAttention(
+                    (SelfAttention): T5Attention(
+                      (q): Linear(in_features=1024, out_features=1024, bias=False)
+                      (k): Linear(in_features=1024, out_features=1024, bias=False)
+                      (v): Linear(in_features=1024, out_features=1024, bias=False)
+                      (o): Linear(in_features=1024, out_features=1024, bias=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                  (1): T5LayerFF(
+                    (DenseReluDense): T5DenseReluDense(
+                      (wi): Linear(in_features=1024, out_features=4096, bias=False)
+                      (wo): Linear(in_features=4096, out_features=1024, bias=False)
+                      (dropout): Dropout(p=0.1, inplace=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                )
+              )
+            )
+          )
+        )
+        (final_layer_norm): T5LayerNorm()
+        (dropout): Dropout(p=0.1, inplace=False)
+      )
+      (decoder): T5Stack(
+        (embed_tokens): Embedding(32128, 1024)
+        (block): ModuleList(
+          (0): FullyShardedDataParallel(
+            (_fsdp_wrapped_module): FlattenParamsWrapper(
+              (_fpw_module): T5Block(
+                (layer): ModuleList(
+                  (0): T5LayerSelfAttention(
+                    (SelfAttention): T5Attention(
+                      (q): Linear(in_features=1024, out_features=1024, bias=False)
+                      (k): Linear(in_features=1024, out_features=1024, bias=False)
+                      (v): Linear(in_features=1024, out_features=1024, bias=False)
+                      (o): Linear(in_features=1024, out_features=1024, bias=False)
+                      (relative_attention_bias): Embedding(32, 16)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                  (1): T5LayerCrossAttention(
+                    (EncDecAttention): T5Attention(
+                      (q): Linear(in_features=1024, out_features=1024, bias=False)
+                      (k): Linear(in_features=1024, out_features=1024, bias=False)
+                      (v): Linear(in_features=1024, out_features=1024, bias=False)
+                      (o): Linear(in_features=1024, out_features=1024, bias=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                  (2): T5LayerFF(
+                    (DenseReluDense): T5DenseReluDense(
+                      (wi): Linear(in_features=1024, out_features=4096, bias=False)
+                      (wo): Linear(in_features=4096, out_features=1024, bias=False)
+                      (dropout): Dropout(p=0.1, inplace=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                )
+              )
+            )
+          )
+          (1): FullyShardedDataParallel(
+            (_fsdp_wrapped_module): FlattenParamsWrapper(
+              (_fpw_module): T5Block(
+                (layer): ModuleList(
+                  (0): T5LayerSelfAttention(
+                    (SelfAttention): T5Attention(
+                      (q): Linear(in_features=1024, out_features=1024, bias=False)
+                      (k): Linear(in_features=1024, out_features=1024, bias=False)
+                      (v): Linear(in_features=1024, out_features=1024, bias=False)
+                      (o): Linear(in_features=1024, out_features=1024, bias=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                  (1): T5LayerCrossAttention(
+                    (EncDecAttention): T5Attention(
+                      (q): Linear(in_features=1024, out_features=1024, bias=False)
+                      (k): Linear(in_features=1024, out_features=1024, bias=False)
+                      (v): Linear(in_features=1024, out_features=1024, bias=False)
+                      (o): Linear(in_features=1024, out_features=1024, bias=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                  (2): T5LayerFF(
+                    (DenseReluDense): T5DenseReluDense(
+                      (wi): Linear(in_features=1024, out_features=4096, bias=False)
+                      (wo): Linear(in_features=4096, out_features=1024, bias=False)
+                      (dropout): Dropout(p=0.1, inplace=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                )
+              )
+            )
+          )
+          (2): FullyShardedDataParallel(
+            (_fsdp_wrapped_module): FlattenParamsWrapper(
+              (_fpw_module): T5Block(
+                (layer): ModuleList(
+                  (0): T5LayerSelfAttention(
+                    (SelfAttention): T5Attention(
+                      (q): Linear(in_features=1024, out_features=1024, bias=False)
+                      (k): Linear(in_features=1024, out_features=1024, bias=False)
+                      (v): Linear(in_features=1024, out_features=1024, bias=False)
+                      (o): Linear(in_features=1024, out_features=1024, bias=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                  (1): T5LayerCrossAttention(
+                    (EncDecAttention): T5Attention(
+                      (q): Linear(in_features=1024, out_features=1024, bias=False)
+                      (k): Linear(in_features=1024, out_features=1024, bias=False)
+                      (v): Linear(in_features=1024, out_features=1024, bias=False)
+                      (o): Linear(in_features=1024, out_features=1024, bias=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                  (2): T5LayerFF(
+                    (DenseReluDense): T5DenseReluDense(
+                      (wi): Linear(in_features=1024, out_features=4096, bias=False)
+                      (wo): Linear(in_features=4096, out_features=1024, bias=False)
+                      (dropout): Dropout(p=0.1, inplace=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                )
+              )
+            )
+          )
+          (3): FullyShardedDataParallel(
+            (_fsdp_wrapped_module): FlattenParamsWrapper(
+              (_fpw_module): T5Block(
+                (layer): ModuleList(
+                  (0): T5LayerSelfAttention(
+                    (SelfAttention): T5Attention(
+                      (q): Linear(in_features=1024, out_features=1024, bias=False)
+                      (k): Linear(in_features=1024, out_features=1024, bias=False)
+                      (v): Linear(in_features=1024, out_features=1024, bias=False)
+                      (o): Linear(in_features=1024, out_features=1024, bias=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                  (1): T5LayerCrossAttention(
+                    (EncDecAttention): T5Attention(
+                      (q): Linear(in_features=1024, out_features=1024, bias=False)
+                      (k): Linear(in_features=1024, out_features=1024, bias=False)
+                      (v): Linear(in_features=1024, out_features=1024, bias=False)
+                      (o): Linear(in_features=1024, out_features=1024, bias=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                  (2): T5LayerFF(
+                    (DenseReluDense): T5DenseReluDense(
+                      (wi): Linear(in_features=1024, out_features=4096, bias=False)
+                      (wo): Linear(in_features=4096, out_features=1024, bias=False)
+                      (dropout): Dropout(p=0.1, inplace=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                )
+              )
+            )
+          )
+          (4): FullyShardedDataParallel(
+            (_fsdp_wrapped_module): FlattenParamsWrapper(
+              (_fpw_module): T5Block(
+                (layer): ModuleList(
+                  (0): T5LayerSelfAttention(
+                    (SelfAttention): T5Attention(
+                      (q): Linear(in_features=1024, out_features=1024, bias=False)
+                      (k): Linear(in_features=1024, out_features=1024, bias=False)
+                      (v): Linear(in_features=1024, out_features=1024, bias=False)
+                      (o): Linear(in_features=1024, out_features=1024, bias=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                  (1): T5LayerCrossAttention(
+                    (EncDecAttention): T5Attention(
+                      (q): Linear(in_features=1024, out_features=1024, bias=False)
+                      (k): Linear(in_features=1024, out_features=1024, bias=False)
+                      (v): Linear(in_features=1024, out_features=1024, bias=False)
+                      (o): Linear(in_features=1024, out_features=1024, bias=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                  (2): T5LayerFF(
+                    (DenseReluDense): T5DenseReluDense(
+                      (wi): Linear(in_features=1024, out_features=4096, bias=False)
+                      (wo): Linear(in_features=4096, out_features=1024, bias=False)
+                      (dropout): Dropout(p=0.1, inplace=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                )
+              )
+            )
+          )
+          (5): FullyShardedDataParallel(
+            (_fsdp_wrapped_module): FlattenParamsWrapper(
+              (_fpw_module): T5Block(
+                (layer): ModuleList(
+                  (0): T5LayerSelfAttention(
+                    (SelfAttention): T5Attention(
+                      (q): Linear(in_features=1024, out_features=1024, bias=False)
+                      (k): Linear(in_features=1024, out_features=1024, bias=False)
+                      (v): Linear(in_features=1024, out_features=1024, bias=False)
+                      (o): Linear(in_features=1024, out_features=1024, bias=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                  (1): T5LayerCrossAttention(
+                    (EncDecAttention): T5Attention(
+                      (q): Linear(in_features=1024, out_features=1024, bias=False)
+                      (k): Linear(in_features=1024, out_features=1024, bias=False)
+                      (v): Linear(in_features=1024, out_features=1024, bias=False)
+                      (o): Linear(in_features=1024, out_features=1024, bias=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                  (2): T5LayerFF(
+                    (DenseReluDense): T5DenseReluDense(
+                      (wi): Linear(in_features=1024, out_features=4096, bias=False)
+                      (wo): Linear(in_features=4096, out_features=1024, bias=False)
+                      (dropout): Dropout(p=0.1, inplace=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                )
+              )
+            )
+          )
+          (6): FullyShardedDataParallel(
+            (_fsdp_wrapped_module): FlattenParamsWrapper(
+              (_fpw_module): T5Block(
+                (layer): ModuleList(
+                  (0): T5LayerSelfAttention(
+                    (SelfAttention): T5Attention(
+                      (q): Linear(in_features=1024, out_features=1024, bias=False)
+                      (k): Linear(in_features=1024, out_features=1024, bias=False)
+                      (v): Linear(in_features=1024, out_features=1024, bias=False)
+                      (o): Linear(in_features=1024, out_features=1024, bias=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                  (1): T5LayerCrossAttention(
+                    (EncDecAttention): T5Attention(
+                      (q): Linear(in_features=1024, out_features=1024, bias=False)
+                      (k): Linear(in_features=1024, out_features=1024, bias=False)
+                      (v): Linear(in_features=1024, out_features=1024, bias=False)
+                      (o): Linear(in_features=1024, out_features=1024, bias=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                  (2): T5LayerFF(
+                    (DenseReluDense): T5DenseReluDense(
+                      (wi): Linear(in_features=1024, out_features=4096, bias=False)
+                      (wo): Linear(in_features=4096, out_features=1024, bias=False)
+                      (dropout): Dropout(p=0.1, inplace=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                )
+              )
+            )
+          )
+          (7): FullyShardedDataParallel(
+            (_fsdp_wrapped_module): FlattenParamsWrapper(
+              (_fpw_module): T5Block(
+                (layer): ModuleList(
+                  (0): T5LayerSelfAttention(
+                    (SelfAttention): T5Attention(
+                      (q): Linear(in_features=1024, out_features=1024, bias=False)
+                      (k): Linear(in_features=1024, out_features=1024, bias=False)
+                      (v): Linear(in_features=1024, out_features=1024, bias=False)
+                      (o): Linear(in_features=1024, out_features=1024, bias=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                  (1): T5LayerCrossAttention(
+                    (EncDecAttention): T5Attention(
+                      (q): Linear(in_features=1024, out_features=1024, bias=False)
+                      (k): Linear(in_features=1024, out_features=1024, bias=False)
+                      (v): Linear(in_features=1024, out_features=1024, bias=False)
+                      (o): Linear(in_features=1024, out_features=1024, bias=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                  (2): T5LayerFF(
+                    (DenseReluDense): T5DenseReluDense(
+                      (wi): Linear(in_features=1024, out_features=4096, bias=False)
+                      (wo): Linear(in_features=4096, out_features=1024, bias=False)
+                      (dropout): Dropout(p=0.1, inplace=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                )
+              )
+            )
+          )
+          (8): FullyShardedDataParallel(
+            (_fsdp_wrapped_module): FlattenParamsWrapper(
+              (_fpw_module): T5Block(
+                (layer): ModuleList(
+                  (0): T5LayerSelfAttention(
+                    (SelfAttention): T5Attention(
+                      (q): Linear(in_features=1024, out_features=1024, bias=False)
+                      (k): Linear(in_features=1024, out_features=1024, bias=False)
+                      (v): Linear(in_features=1024, out_features=1024, bias=False)
+                      (o): Linear(in_features=1024, out_features=1024, bias=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                  (1): T5LayerCrossAttention(
+                    (EncDecAttention): T5Attention(
+                      (q): Linear(in_features=1024, out_features=1024, bias=False)
+                      (k): Linear(in_features=1024, out_features=1024, bias=False)
+                      (v): Linear(in_features=1024, out_features=1024, bias=False)
+                      (o): Linear(in_features=1024, out_features=1024, bias=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                  (2): T5LayerFF(
+                    (DenseReluDense): T5DenseReluDense(
+                      (wi): Linear(in_features=1024, out_features=4096, bias=False)
+                      (wo): Linear(in_features=4096, out_features=1024, bias=False)
+                      (dropout): Dropout(p=0.1, inplace=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                )
+              )
+            )
+          )
+          (9): FullyShardedDataParallel(
+            (_fsdp_wrapped_module): FlattenParamsWrapper(
+              (_fpw_module): T5Block(
+                (layer): ModuleList(
+                  (0): T5LayerSelfAttention(
+                    (SelfAttention): T5Attention(
+                      (q): Linear(in_features=1024, out_features=1024, bias=False)
+                      (k): Linear(in_features=1024, out_features=1024, bias=False)
+                      (v): Linear(in_features=1024, out_features=1024, bias=False)
+                      (o): Linear(in_features=1024, out_features=1024, bias=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                  (1): T5LayerCrossAttention(
+                    (EncDecAttention): T5Attention(
+                      (q): Linear(in_features=1024, out_features=1024, bias=False)
+                      (k): Linear(in_features=1024, out_features=1024, bias=False)
+                      (v): Linear(in_features=1024, out_features=1024, bias=False)
+                      (o): Linear(in_features=1024, out_features=1024, bias=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                  (2): T5LayerFF(
+                    (DenseReluDense): T5DenseReluDense(
+                      (wi): Linear(in_features=1024, out_features=4096, bias=False)
+                      (wo): Linear(in_features=4096, out_features=1024, bias=False)
+                      (dropout): Dropout(p=0.1, inplace=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                )
+              )
+            )
+          )
+          (10): FullyShardedDataParallel(
+            (_fsdp_wrapped_module): FlattenParamsWrapper(
+              (_fpw_module): T5Block(
+                (layer): ModuleList(
+                  (0): T5LayerSelfAttention(
+                    (SelfAttention): T5Attention(
+                      (q): Linear(in_features=1024, out_features=1024, bias=False)
+                      (k): Linear(in_features=1024, out_features=1024, bias=False)
+                      (v): Linear(in_features=1024, out_features=1024, bias=False)
+                      (o): Linear(in_features=1024, out_features=1024, bias=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                  (1): T5LayerCrossAttention(
+                    (EncDecAttention): T5Attention(
+                      (q): Linear(in_features=1024, out_features=1024, bias=False)
+                      (k): Linear(in_features=1024, out_features=1024, bias=False)
+                      (v): Linear(in_features=1024, out_features=1024, bias=False)
+                      (o): Linear(in_features=1024, out_features=1024, bias=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                  (2): T5LayerFF(
+                    (DenseReluDense): T5DenseReluDense(
+                      (wi): Linear(in_features=1024, out_features=4096, bias=False)
+                      (wo): Linear(in_features=4096, out_features=1024, bias=False)
+                      (dropout): Dropout(p=0.1, inplace=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                )
+              )
+            )
+          )
+          (11): FullyShardedDataParallel(
+            (_fsdp_wrapped_module): FlattenParamsWrapper(
+              (_fpw_module): T5Block(
+                (layer): ModuleList(
+                  (0): T5LayerSelfAttention(
+                    (SelfAttention): T5Attention(
+                      (q): Linear(in_features=1024, out_features=1024, bias=False)
+                      (k): Linear(in_features=1024, out_features=1024, bias=False)
+                      (v): Linear(in_features=1024, out_features=1024, bias=False)
+                      (o): Linear(in_features=1024, out_features=1024, bias=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                  (1): T5LayerCrossAttention(
+                    (EncDecAttention): T5Attention(
+                      (q): Linear(in_features=1024, out_features=1024, bias=False)
+                      (k): Linear(in_features=1024, out_features=1024, bias=False)
+                      (v): Linear(in_features=1024, out_features=1024, bias=False)
+                      (o): Linear(in_features=1024, out_features=1024, bias=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                  (2): T5LayerFF(
+                    (DenseReluDense): T5DenseReluDense(
+                      (wi): Linear(in_features=1024, out_features=4096, bias=False)
+                      (wo): Linear(in_features=4096, out_features=1024, bias=False)
+                      (dropout): Dropout(p=0.1, inplace=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                )
+              )
+            )
+          )
+          (12): FullyShardedDataParallel(
+            (_fsdp_wrapped_module): FlattenParamsWrapper(
+              (_fpw_module): T5Block(
+                (layer): ModuleList(
+                  (0): T5LayerSelfAttention(
+                    (SelfAttention): T5Attention(
+                      (q): Linear(in_features=1024, out_features=1024, bias=False)
+                      (k): Linear(in_features=1024, out_features=1024, bias=False)
+                      (v): Linear(in_features=1024, out_features=1024, bias=False)
+                      (o): Linear(in_features=1024, out_features=1024, bias=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                  (1): T5LayerCrossAttention(
+                    (EncDecAttention): T5Attention(
+                      (q): Linear(in_features=1024, out_features=1024, bias=False)
+                      (k): Linear(in_features=1024, out_features=1024, bias=False)
+                      (v): Linear(in_features=1024, out_features=1024, bias=False)
+                      (o): Linear(in_features=1024, out_features=1024, bias=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                  (2): T5LayerFF(
+                    (DenseReluDense): T5DenseReluDense(
+                      (wi): Linear(in_features=1024, out_features=4096, bias=False)
+                      (wo): Linear(in_features=4096, out_features=1024, bias=False)
+                      (dropout): Dropout(p=0.1, inplace=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                )
+              )
+            )
+          )
+          (13): FullyShardedDataParallel(
+            (_fsdp_wrapped_module): FlattenParamsWrapper(
+              (_fpw_module): T5Block(
+                (layer): ModuleList(
+                  (0): T5LayerSelfAttention(
+                    (SelfAttention): T5Attention(
+                      (q): Linear(in_features=1024, out_features=1024, bias=False)
+                      (k): Linear(in_features=1024, out_features=1024, bias=False)
+                      (v): Linear(in_features=1024, out_features=1024, bias=False)
+                      (o): Linear(in_features=1024, out_features=1024, bias=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                  (1): T5LayerCrossAttention(
+                    (EncDecAttention): T5Attention(
+                      (q): Linear(in_features=1024, out_features=1024, bias=False)
+                      (k): Linear(in_features=1024, out_features=1024, bias=False)
+                      (v): Linear(in_features=1024, out_features=1024, bias=False)
+                      (o): Linear(in_features=1024, out_features=1024, bias=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                  (2): T5LayerFF(
+                    (DenseReluDense): T5DenseReluDense(
+                      (wi): Linear(in_features=1024, out_features=4096, bias=False)
+                      (wo): Linear(in_features=4096, out_features=1024, bias=False)
+                      (dropout): Dropout(p=0.1, inplace=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                )
+              )
+            )
+          )
+          (14): FullyShardedDataParallel(
+            (_fsdp_wrapped_module): FlattenParamsWrapper(
+              (_fpw_module): T5Block(
+                (layer): ModuleList(
+                  (0): T5LayerSelfAttention(
+                    (SelfAttention): T5Attention(
+                      (q): Linear(in_features=1024, out_features=1024, bias=False)
+                      (k): Linear(in_features=1024, out_features=1024, bias=False)
+                      (v): Linear(in_features=1024, out_features=1024, bias=False)
+                      (o): Linear(in_features=1024, out_features=1024, bias=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                  (1): T5LayerCrossAttention(
+                    (EncDecAttention): T5Attention(
+                      (q): Linear(in_features=1024, out_features=1024, bias=False)
+                      (k): Linear(in_features=1024, out_features=1024, bias=False)
+                      (v): Linear(in_features=1024, out_features=1024, bias=False)
+                      (o): Linear(in_features=1024, out_features=1024, bias=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                  (2): T5LayerFF(
+                    (DenseReluDense): T5DenseReluDense(
+                      (wi): Linear(in_features=1024, out_features=4096, bias=False)
+                      (wo): Linear(in_features=4096, out_features=1024, bias=False)
+                      (dropout): Dropout(p=0.1, inplace=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                )
+              )
+            )
+          )
+          (15): FullyShardedDataParallel(
+            (_fsdp_wrapped_module): FlattenParamsWrapper(
+              (_fpw_module): T5Block(
+                (layer): ModuleList(
+                  (0): T5LayerSelfAttention(
+                    (SelfAttention): T5Attention(
+                      (q): Linear(in_features=1024, out_features=1024, bias=False)
+                      (k): Linear(in_features=1024, out_features=1024, bias=False)
+                      (v): Linear(in_features=1024, out_features=1024, bias=False)
+                      (o): Linear(in_features=1024, out_features=1024, bias=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                  (1): T5LayerCrossAttention(
+                    (EncDecAttention): T5Attention(
+                      (q): Linear(in_features=1024, out_features=1024, bias=False)
+                      (k): Linear(in_features=1024, out_features=1024, bias=False)
+                      (v): Linear(in_features=1024, out_features=1024, bias=False)
+                      (o): Linear(in_features=1024, out_features=1024, bias=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                  (2): T5LayerFF(
+                    (DenseReluDense): T5DenseReluDense(
+                      (wi): Linear(in_features=1024, out_features=4096, bias=False)
+                      (wo): Linear(in_features=4096, out_features=1024, bias=False)
+                      (dropout): Dropout(p=0.1, inplace=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                )
+              )
+            )
+          )
+          (16): FullyShardedDataParallel(
+            (_fsdp_wrapped_module): FlattenParamsWrapper(
+              (_fpw_module): T5Block(
+                (layer): ModuleList(
+                  (0): T5LayerSelfAttention(
+                    (SelfAttention): T5Attention(
+                      (q): Linear(in_features=1024, out_features=1024, bias=False)
+                      (k): Linear(in_features=1024, out_features=1024, bias=False)
+                      (v): Linear(in_features=1024, out_features=1024, bias=False)
+                      (o): Linear(in_features=1024, out_features=1024, bias=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                  (1): T5LayerCrossAttention(
+                    (EncDecAttention): T5Attention(
+                      (q): Linear(in_features=1024, out_features=1024, bias=False)
+                      (k): Linear(in_features=1024, out_features=1024, bias=False)
+                      (v): Linear(in_features=1024, out_features=1024, bias=False)
+                      (o): Linear(in_features=1024, out_features=1024, bias=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                  (2): T5LayerFF(
+                    (DenseReluDense): T5DenseReluDense(
+                      (wi): Linear(in_features=1024, out_features=4096, bias=False)
+                      (wo): Linear(in_features=4096, out_features=1024, bias=False)
+                      (dropout): Dropout(p=0.1, inplace=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                )
+              )
+            )
+          )
+          (17): FullyShardedDataParallel(
+            (_fsdp_wrapped_module): FlattenParamsWrapper(
+              (_fpw_module): T5Block(
+                (layer): ModuleList(
+                  (0): T5LayerSelfAttention(
+                    (SelfAttention): T5Attention(
+                      (q): Linear(in_features=1024, out_features=1024, bias=False)
+                      (k): Linear(in_features=1024, out_features=1024, bias=False)
+                      (v): Linear(in_features=1024, out_features=1024, bias=False)
+                      (o): Linear(in_features=1024, out_features=1024, bias=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                  (1): T5LayerCrossAttention(
+                    (EncDecAttention): T5Attention(
+                      (q): Linear(in_features=1024, out_features=1024, bias=False)
+                      (k): Linear(in_features=1024, out_features=1024, bias=False)
+                      (v): Linear(in_features=1024, out_features=1024, bias=False)
+                      (o): Linear(in_features=1024, out_features=1024, bias=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                  (2): T5LayerFF(
+                    (DenseReluDense): T5DenseReluDense(
+                      (wi): Linear(in_features=1024, out_features=4096, bias=False)
+                      (wo): Linear(in_features=4096, out_features=1024, bias=False)
+                      (dropout): Dropout(p=0.1, inplace=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                )
+              )
+            )
+          )
+          (18): FullyShardedDataParallel(
+            (_fsdp_wrapped_module): FlattenParamsWrapper(
+              (_fpw_module): T5Block(
+                (layer): ModuleList(
+                  (0): T5LayerSelfAttention(
+                    (SelfAttention): T5Attention(
+                      (q): Linear(in_features=1024, out_features=1024, bias=False)
+                      (k): Linear(in_features=1024, out_features=1024, bias=False)
+                      (v): Linear(in_features=1024, out_features=1024, bias=False)
+                      (o): Linear(in_features=1024, out_features=1024, bias=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                  (1): T5LayerCrossAttention(
+                    (EncDecAttention): T5Attention(
+                      (q): Linear(in_features=1024, out_features=1024, bias=False)
+                      (k): Linear(in_features=1024, out_features=1024, bias=False)
+                      (v): Linear(in_features=1024, out_features=1024, bias=False)
+                      (o): Linear(in_features=1024, out_features=1024, bias=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                  (2): T5LayerFF(
+                    (DenseReluDense): T5DenseReluDense(
+                      (wi): Linear(in_features=1024, out_features=4096, bias=False)
+                      (wo): Linear(in_features=4096, out_features=1024, bias=False)
+                      (dropout): Dropout(p=0.1, inplace=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                )
+              )
+            )
+          )
+          (19): FullyShardedDataParallel(
+            (_fsdp_wrapped_module): FlattenParamsWrapper(
+              (_fpw_module): T5Block(
+                (layer): ModuleList(
+                  (0): T5LayerSelfAttention(
+                    (SelfAttention): T5Attention(
+                      (q): Linear(in_features=1024, out_features=1024, bias=False)
+                      (k): Linear(in_features=1024, out_features=1024, bias=False)
+                      (v): Linear(in_features=1024, out_features=1024, bias=False)
+                      (o): Linear(in_features=1024, out_features=1024, bias=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                  (1): T5LayerCrossAttention(
+                    (EncDecAttention): T5Attention(
+                      (q): Linear(in_features=1024, out_features=1024, bias=False)
+                      (k): Linear(in_features=1024, out_features=1024, bias=False)
+                      (v): Linear(in_features=1024, out_features=1024, bias=False)
+                      (o): Linear(in_features=1024, out_features=1024, bias=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                  (2): T5LayerFF(
+                    (DenseReluDense): T5DenseReluDense(
+                      (wi): Linear(in_features=1024, out_features=4096, bias=False)
+                      (wo): Linear(in_features=4096, out_features=1024, bias=False)
+                      (dropout): Dropout(p=0.1, inplace=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                )
+              )
+            )
+          )
+          (20): FullyShardedDataParallel(
+            (_fsdp_wrapped_module): FlattenParamsWrapper(
+              (_fpw_module): T5Block(
+                (layer): ModuleList(
+                  (0): T5LayerSelfAttention(
+                    (SelfAttention): T5Attention(
+                      (q): Linear(in_features=1024, out_features=1024, bias=False)
+                      (k): Linear(in_features=1024, out_features=1024, bias=False)
+                      (v): Linear(in_features=1024, out_features=1024, bias=False)
+                      (o): Linear(in_features=1024, out_features=1024, bias=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                  (1): T5LayerCrossAttention(
+                    (EncDecAttention): T5Attention(
+                      (q): Linear(in_features=1024, out_features=1024, bias=False)
+                      (k): Linear(in_features=1024, out_features=1024, bias=False)
+                      (v): Linear(in_features=1024, out_features=1024, bias=False)
+                      (o): Linear(in_features=1024, out_features=1024, bias=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                  (2): T5LayerFF(
+                    (DenseReluDense): T5DenseReluDense(
+                      (wi): Linear(in_features=1024, out_features=4096, bias=False)
+                      (wo): Linear(in_features=4096, out_features=1024, bias=False)
+                      (dropout): Dropout(p=0.1, inplace=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                )
+              )
+            )
+          )
+          (21): FullyShardedDataParallel(
+            (_fsdp_wrapped_module): FlattenParamsWrapper(
+              (_fpw_module): T5Block(
+                (layer): ModuleList(
+                  (0): T5LayerSelfAttention(
+                    (SelfAttention): T5Attention(
+                      (q): Linear(in_features=1024, out_features=1024, bias=False)
+                      (k): Linear(in_features=1024, out_features=1024, bias=False)
+                      (v): Linear(in_features=1024, out_features=1024, bias=False)
+                      (o): Linear(in_features=1024, out_features=1024, bias=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                  (1): T5LayerCrossAttention(
+                    (EncDecAttention): T5Attention(
+                      (q): Linear(in_features=1024, out_features=1024, bias=False)
+                      (k): Linear(in_features=1024, out_features=1024, bias=False)
+                      (v): Linear(in_features=1024, out_features=1024, bias=False)
+                      (o): Linear(in_features=1024, out_features=1024, bias=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                  (2): T5LayerFF(
+                    (DenseReluDense): T5DenseReluDense(
+                      (wi): Linear(in_features=1024, out_features=4096, bias=False)
+                      (wo): Linear(in_features=4096, out_features=1024, bias=False)
+                      (dropout): Dropout(p=0.1, inplace=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                )
+              )
+            )
+          )
+          (22): FullyShardedDataParallel(
+            (_fsdp_wrapped_module): FlattenParamsWrapper(
+              (_fpw_module): T5Block(
+                (layer): ModuleList(
+                  (0): T5LayerSelfAttention(
+                    (SelfAttention): T5Attention(
+                      (q): Linear(in_features=1024, out_features=1024, bias=False)
+                      (k): Linear(in_features=1024, out_features=1024, bias=False)
+                      (v): Linear(in_features=1024, out_features=1024, bias=False)
+                      (o): Linear(in_features=1024, out_features=1024, bias=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                  (1): T5LayerCrossAttention(
+                    (EncDecAttention): T5Attention(
+                      (q): Linear(in_features=1024, out_features=1024, bias=False)
+                      (k): Linear(in_features=1024, out_features=1024, bias=False)
+                      (v): Linear(in_features=1024, out_features=1024, bias=False)
+                      (o): Linear(in_features=1024, out_features=1024, bias=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                  (2): T5LayerFF(
+                    (DenseReluDense): T5DenseReluDense(
+                      (wi): Linear(in_features=1024, out_features=4096, bias=False)
+                      (wo): Linear(in_features=4096, out_features=1024, bias=False)
+                      (dropout): Dropout(p=0.1, inplace=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                )
+              )
+            )
+          )
+          (23): FullyShardedDataParallel(
+            (_fsdp_wrapped_module): FlattenParamsWrapper(
+              (_fpw_module): T5Block(
+                (layer): ModuleList(
+                  (0): T5LayerSelfAttention(
+                    (SelfAttention): T5Attention(
+                      (q): Linear(in_features=1024, out_features=1024, bias=False)
+                      (k): Linear(in_features=1024, out_features=1024, bias=False)
+                      (v): Linear(in_features=1024, out_features=1024, bias=False)
+                      (o): Linear(in_features=1024, out_features=1024, bias=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                  (1): T5LayerCrossAttention(
+                    (EncDecAttention): T5Attention(
+                      (q): Linear(in_features=1024, out_features=1024, bias=False)
+                      (k): Linear(in_features=1024, out_features=1024, bias=False)
+                      (v): Linear(in_features=1024, out_features=1024, bias=False)
+                      (o): Linear(in_features=1024, out_features=1024, bias=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                  (2): T5LayerFF(
+                    (DenseReluDense): T5DenseReluDense(
+                      (wi): Linear(in_features=1024, out_features=4096, bias=False)
+                      (wo): Linear(in_features=4096, out_features=1024, bias=False)
+                      (dropout): Dropout(p=0.1, inplace=False)
+                    )
+                    (layer_norm): T5LayerNorm()
+                    (dropout): Dropout(p=0.1, inplace=False)
+                  )
+                )
+              )
+            )
+          )
+        )
+        (final_layer_norm): T5LayerNorm()
+        (dropout): Dropout(p=0.1, inplace=False)
+      )
+      (lm_head): Linear(in_features=1024, out_features=32128, bias=False)
+    )
+  )
+)
+
+
