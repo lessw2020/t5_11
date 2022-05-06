@@ -20,7 +20,7 @@ export LOGLEVEL=INFO
 
 
 # debugging flags (optional)
-export NCCL_DEBUG=INFO
+export NCCL_DEBUG=WARN
 export NCCL_DEBUG_SUBSYS=ALL
 export PYTHONFAULTHANDLER=1
 
