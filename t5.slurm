@@ -21,7 +21,7 @@ export LOGLEVEL=INFO
 
 # debugging flags (optional)
 export NCCL_DEBUG=WARN
-export NCCL_DEBUG_SUBSYS=ALL
+export NCCL_DEBUG_SUBSYS=WARN
 export PYTHONFAULTHANDLER=1
 
 export LD_LIBRARY_PATH=/opt/amazon/efa/lib:$LD_LIBRARY_PATH
