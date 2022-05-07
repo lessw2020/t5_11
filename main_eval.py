@@ -272,7 +272,7 @@ def fsdp_main(rank, world_size, args):
     # print(f"bailing early...remove")
     # return
 
-    model_name = "t5-large"  # "google/t5-v1_1-small"  #   #
+    model_name = cfg.model_name #"t5-large"  # "google/t5-v1_1-small"  #   #
     save_name = "t5large-"
     printable_model_name = str.replace(model_name, "/", "==")
     # t5-base

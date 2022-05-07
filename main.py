@@ -156,6 +156,18 @@ def setup_tasks(rank, world_size, cfg):
     setup_environ_flags()
 
 
+from datetime import datetime
+
+
+def get_date_of_run():
+    """create date and time for file save uniqueness
+    example: 2022-05-07-08:31:12_PM'
+    """
+    date_of_run = datetime.now().strftime("%Y-%m-%d-%I:%M:%S_%p")
+    print(f"--> current date and time of run = {date_of_run}")
+    return date_of_run
+
+
 # ----------  Training ----------------------------------------------------------
 def train(
     args,

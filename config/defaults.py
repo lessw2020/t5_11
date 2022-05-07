@@ -7,23 +7,34 @@ class train_config:
     host_port: str = "12368"
 
     # model
-    model_name = "t5-large"  # "google/t5-v1_1-small"  #
+    model_name = "google/t5-v1_1-xl"  # "google/t5-v1_1-small"
+    tokenizer = "t5-large"
+    # available models
+    ## t5-base
+    # google/t5-v1_1-small
+    # google/t5-v1_1-base
+    # google/t5-v1_1-large
+    # google/t5-v1_1-xl  #3b
+    # google/t5-v1_1-xxl #11b
     save_model: bool = True
-    model_checkpoint = "t5_large_save.pt"
-    print_sharding_plan: bool = True
+    model_checkpoint = "t5_small_save.pt"
+    print_sharding_plan: bool = False
+
+    # dataloaders
+    num_workers_dataloader: int = 2
 
     # policies
-    fsdp_unit_size = 2000000
+    fsdp_unit_size = 1000000
     use_mixed_precision: bool = False
     activation_checkpointing: bool = True
 
     # datasets
-    dataset_train = "datasets_grammar/grammar_train.csv"  # grammar_13k.csv
+    dataset_train = "datasets_grammar/gtrain_150K.csv"  # grammar_13k.csv
     dataset_test = "datasets_grammar/grammar_validation.csv"
 
     # training
-    batch_size: int = 4
-    num_epochs: int = 3
+    batch_size: int = 6
+    num_epochs: int = 10
 
     # validation
     run_validation: bool = True

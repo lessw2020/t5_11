@@ -56,6 +56,7 @@ from torch.utils.data import DataLoader
 
 from sklearn.model_selection import train_test_split
 import time
+from datetime import datetime
 
 # local imports
 import verify
@@ -74,6 +75,15 @@ g_addr = "localhost"
 
 def _is_rank_0():
     return 0 == os.getenv("RANK")
+
+
+def get_date_of_run():
+    """create date and time for file save uniqueness
+    example: 2022-05-07-08:31:12_PM'
+    """
+    date_of_run = datetime.now().strftime("%Y-%m-%d-%I:%M:%S_%p")
+    print(f"--> current date and time of run = {date_of_run}")
+    return date_of_run
 
 
 def parse_args():
@@ -276,6 +286,7 @@ def fsdp_main(args):
 
     if rank == 0:
         print(f"--> running with these defaults {cfg}")
+        time_of_run = get_date_of_run()
 
     setup_tasks(rank, world_size, cfg)
 
@@ -289,8 +300,10 @@ def fsdp_main(args):
     mp_policy, wrapping_policy = get_policies(cfg, fsdp_unit_params)
 
     model_name = cfg.model_name  # "google/t5-v1_1-small"  #   #
-    
-    printable_model_name = str.replace(model_name, "/", "==")
+    if rank == 0:
+        print(f"--> training for model {model_name}")
+
+    printable_model_name = str.replace(model_name, "/", "=")
     save_name = printable_model_name + "-"
 
     # t5-base
@@ -301,7 +314,7 @@ def fsdp_main(args):
     # google/t5-v1_1-xxl #11b
 
     # grammar correction
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    tokenizer = AutoTokenizer.from_pretrained(cfg.tokenizer)
 
     model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
 
@@ -332,7 +345,7 @@ def fsdp_main(args):
         print(f"using dataset {train_name}")
     # print("bailing")
 
-    val_dataset = dg.get_dataset(tokenizer, cfg.dataset_test, 512, 150, True)
+    val_dataset = dg.get_dataset(tokenizer, cfg.dataset_test, 512, 512, True)
     if 0 == os.getenv("RANK"):
         print(f"--> Validation set len = {len(val_dataset)}")
         print(f"using dataset {cfg.dataset_test}")
@@ -346,7 +359,11 @@ def fsdp_main(args):
 
     train_kwargs = {"batch_size": batch_size, "sampler": sampler1}
     test_kwargs = {"batch_size": val_batch_size, "sampler": sampler2}
-    cuda_kwargs = {"num_workers": 2, "pin_memory": True, "shuffle": False}
+    cuda_kwargs = {
+        "num_workers": cfg.num_workers_dataloader,
+        "pin_memory": True,
+        "shuffle": False,
+    }
     train_kwargs.update(cuda_kwargs)
     test_kwargs.update(cuda_kwargs)
 
@@ -454,7 +471,7 @@ def fsdp_main(args):
             curr_val_loss = validation(model, local_rank, world_size, test_loader)
 
         scheduler.step()
-        
+
         if rank == 0:
             print(f"--> epoch {epoch} completed...entering save and stats zone")
 
@@ -470,9 +487,9 @@ def fsdp_main(args):
 
         if cfg.save_model and curr_val_loss < best_val_loss:
             # update curr best val accuracy
-            
+
             # save
-            if rank==0:
+            if rank == 0:
                 print(f"--> entering save model state...")
             save_policy = FullStateDictConfig(offload_to_cpu=True, rank0_only=True)
             with FSDP.state_dict_type(
@@ -486,17 +503,19 @@ def fsdp_main(args):
 
             if rank == 0:
                 print(f"--> saving model ...")
-                currEpoch = "-" +str(epoch)+"-"+ str(round(curr_val_loss.item(),4)) + ".pt"
-                model_save_name = save_name + currEpoch
+                currEpoch = (
+                    "-" + str(epoch) + "-" + str(round(curr_val_loss.item(), 4)) + ".pt"
+                )
+                model_save_name = "-" + time_of_run + "-" + save_name + currEpoch
 
                 torch.save(cpu_state, model_save_name)
 
                 print(f"--> saved {model_save_name} to disk")
         # announce new val loss record:
-        if rank==0 and curr_val_loss < best_val_loss:
+        if rank == 0 and curr_val_loss < best_val_loss:
 
-             best_val_loss = curr_val_loss
-             print(f"-->>>> New Val Loss Record: {best_val_loss}")
+            best_val_loss = curr_val_loss
+            print(f"-->>>> New Val Loss Record: {best_val_loss}")
 
     # init_end_event.record()
     if rank == 0:
