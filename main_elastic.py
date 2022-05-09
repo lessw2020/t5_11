@@ -468,6 +468,10 @@ def fsdp_main(args):
             sampler=sampler1,
             profiler=torch_profiler,
         )
+        if cfg.block_for_validation:
+            dist.barrier()
+            if rank == 0:
+                print(f"--> blocking ranks for pre-validation synching...")
 
         if cfg.run_validation:
             curr_val_loss = validation(model, local_rank, world_size, test_loader)
