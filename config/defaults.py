@@ -7,7 +7,7 @@ class train_config:
     host_port: str = "12368"
 
     # model
-    model_name = "google/t5-v1_1-xl"  # "google/t5-v1_1-small"
+    model_name = "google/t5-v1_1-large"  # "google/t5-v1_1-small"
     tokenizer = "t5-large"
     # available models
     ## t5-base
@@ -25,21 +25,22 @@ class train_config:
 
     # policies
     fsdp_unit_size = 1000000
-    use_mixed_precision: bool = False
+    use_mixed_precision: bool = True
     activation_checkpointing: bool = True
 
     # datasets
-    dataset_train = "datasets_grammar/gtrain_150K.csv"  # grammar_13k.csv
+    dataset_train = "datasets_grammar/grammar_train.csv"  # grammar_13k.csv
     dataset_test = "datasets_grammar/grammar_validation.csv"
 
     # training
-    batch_size: int = 6
+    batch_size: int = 4
     num_epochs: int = 10
 
     # validation
-    run_validation: bool = True
+    run_validation: bool = False
     val_batch_size = 4
 
     # logging
     track_memory = True
     memory_report: bool = True
+    nccl_debug_handler: bool = True

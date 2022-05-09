@@ -145,8 +145,10 @@ def setup(rank, world_size, cfg):
     dist.init_process_group("nccl")  # , rank=rank, world_size=world_size)
 
 
-def setup_environ_flags():
+def setup_environ_flags(cfg):
     os.environ["TORCH_SHOW_CPP_STACKTRACES"] = str(1)
+    if cfg.nccl_debug_handler:
+        os.environ["NCCL_ASYNC_ERROR_HANDLING"] = str(1)
 
 
 def cleanup():
@@ -163,7 +165,7 @@ def setup_tasks(rank, world_size, cfg):
     setup(rank, world_size, cfg)
     # clear_gpu_cache() - need to call torch set device first?
     # set_printing()
-    setup_environ_flags()
+    setup_environ_flags(cfg)
 
 
 # ----------  Training ----------------------------------------------------------
