@@ -173,6 +173,7 @@ def train(
     args,
     model,
     local_rank,
+    rank,
     world_size,
     train_loader,
     optimizer,
@@ -185,7 +186,7 @@ def train(
 
     if sampler:
         sampler.set_epoch(epoch)
-    if local_rank == 0:
+    if rank == 0:
         inner_pbar = tqdm.tqdm(
             range(len(train_loader)), colour="blue", desc="r0 Training Epoch"
         )
@@ -217,14 +218,14 @@ def train(
         optimizer.step()
         ddp_loss[0] += loss.item()
         ddp_loss[1] += len(batch)
-        if local_rank == 0:
+        if rank == 0:
             inner_pbar.update(1)
         if profiler:
             profiler.step()
 
     dist.reduce(ddp_loss, 0, op=dist.ReduceOp.SUM)
     train_accuracy = ddp_loss[0] / ddp_loss[1]
-    if local_rank == 0:
+    if rank == 0:
         inner_pbar.close()
 
         print(
@@ -236,11 +237,11 @@ def train(
 # ---- Validation ---------------
 
 
-def validation(model, local_rank, world_size, test_loader):
+def validation(model, local_rank, rank, world_size, test_loader):
     model.eval()
     correct = 0
     ddp_loss = torch.zeros(3).to(local_rank)
-    if local_rank == 0:
+    if rank == 0:
         inner_pbar = tqdm.tqdm(
             range(len(test_loader)), colour="green", desc="r0 Validation Epoch"
         )
@@ -256,7 +257,7 @@ def validation(model, local_rank, world_size, test_loader):
             ddp_loss[0] += output["loss"].item()  # sum up batch loss
             ddp_loss[1] += len(batch)
 
-            if local_rank == 0:
+            if rank == 0:
                 inner_pbar.update(1)
             # pred = output.logits.argmax(
             #    dim=1, keepdim=True
@@ -267,7 +268,7 @@ def validation(model, local_rank, world_size, test_loader):
     dist.reduce(ddp_loss, 0, op=dist.ReduceOp.SUM)
     val_loss = ddp_loss[0] / ddp_loss[1]
 
-    if local_rank == 0:
+    if rank == 0:
         # test_loss = ddp_loss[0] / ddp_loss[1]
         inner_pbar.close()
         print(f"Validation Loss: {val_loss:.4f}")
@@ -372,8 +373,8 @@ def fsdp_main(args):
     train_loader = torch.utils.data.DataLoader(train_dataset, **train_kwargs)
     test_loader = torch.utils.data.DataLoader(val_dataset, **test_kwargs)
 
-    torch.cuda.set_device(rank)
-    clear_gpu_cache(rank)
+    torch.cuda.set_device(local_rank)
+    clear_gpu_cache(local_rank)
 
     # init_start_event = torch.cuda.Event(enable_timing=True)
     # init_end_event = torch.cuda.Event(enable_timing=True)
@@ -461,6 +462,7 @@ def fsdp_main(args):
             args,
             model,
             local_rank,
+            rank,
             world_size,
             train_loader,
             optimizer,
@@ -470,7 +472,7 @@ def fsdp_main(args):
         )
 
         if cfg.run_validation:
-            curr_val_loss = validation(model, local_rank, world_size, test_loader)
+            curr_val_loss = validation(model, local_rank, rank, world_size, test_loader)
 
         scheduler.step()
 
