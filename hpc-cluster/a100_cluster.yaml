@@ -1,0 +1,61 @@
+Region: us-west-2
+Image:
+  Os: alinux2
+HeadNode:
+  InstanceType: c5.2xlarge
+  Iam:
+    AdditionalIamPolicies:
+      - Policy: arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+      - Policy: arn:aws:iam::aws:policy/CloudWatchFullAccess
+      - Policy: arn:aws:iam::aws:policy/AWSPriceListServiceFullAccess
+      - Policy: arn:aws:iam::aws:policy/AmazonSSMFullAccess
+      - Policy: arn:aws:iam::aws:policy/AWSCloudFormationReadOnlyAccess
+      # Add below policy for capacity reservation for A100
+      # - Policy: arn:aws:iam::<AccunontID>:policy/RunInstancesInCapacityReservation
+    S3Access:
+      - BucketName: fsdp-expeirments
+  Ssh:
+    KeyName: FB_account.pem
+  LocalStorage:
+    RootVolume:
+      Size: 450
+  Networking:
+    SubnetId: subnet-005ffcd15c0e841bb
+    ElasticIp: true
+  Dcv:
+    Enabled: true
+    Port: 8443
+    AllowedIps: 0.0.0.0/0
+  CustomActions:
+    OnNodeConfigured:
+      Script: s3://fsdp-expeirments/head-post-install.sh
+      Args:
+        - https://github.com/perifaws/aws-parallelcluster-monitoring/tarball/main
+        - aws-parallelcluster-monitoring
+        - install-monitoring.sh
+Scheduling:
+  Scheduler: slurm
+  SlurmQueues:
+    - Name: queue0
+      Networking:
+        SubnetIds:
+          - subnet-0aa82679e66fe60cc
+        PlacementGroup:
+          Enabled: true
+        AssignPublicIp: true
+      ComputeResources:
+        - Name: queue0-p38xlarge
+          InstanceType: p3.16xlarge
+          MaxCount: 4
+          MinCount: 3
+          # Efa:
+          #   Enabled: true
+      Iam:
+        S3Access:
+          - BucketName: fsdp-expeirments
+        AdditionalIamPolicies:
+          - Policy: arn:aws:iam::aws:policy/CloudWatchFullAccess
+          - Policy: arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+          - Policy: arn:aws:iam::aws:policy/AWSPriceListServiceFullAccess
+          - Policy: arn:aws:iam::aws:policy/AmazonSSMFullAccess
+"cluster.yaml" 86L, 2698B                                                                                                                                           1,1           Top
