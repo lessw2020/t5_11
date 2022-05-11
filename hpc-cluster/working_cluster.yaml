@@ -22,10 +22,6 @@ HeadNode:
   Networking:
     SubnetId: subnet-06cb8f7d5dbb36d49
     ElasticIp: true
-  Dcv:
-    Enabled: true
-    Port: 8443
-    AllowedIps: 0.0.0.0/0
   CustomActions:
     OnNodeConfigured:
       Script: s3://fsdp-expeirments/head-post-install.sh
@@ -46,7 +42,6 @@ Scheduling:
           - subnet-027814d2009a0b039
         PlacementGroup:
           Enabled: true
-        AssignPublicIp: true
       ComputeResources:
         - Name: queue0-p38xlarge
           InstanceType: p4d.24xlarge
