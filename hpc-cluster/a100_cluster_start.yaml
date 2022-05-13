@@ -1,0 +1,64 @@
+Region: ap-northeast-2
+Image:
+  Os: alinux2
+  CustomAmi: ami-013b88f1f972940d0
+HeadNode:
+  InstanceType: c6i.8xlarge
+  Iam:
+    AdditionalIamPolicies:
+      - Policy: arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+      - Policy: arn:aws:iam::aws:policy/CloudWatchFullAccess
+      - Policy: arn:aws:iam::aws:policy/AWSPriceListServiceFullAccess
+      - Policy: arn:aws:iam::aws:policy/AmazonSSMFullAccess
+      - Policy: arn:aws:iam::aws:policy/AWSCloudFormationReadOnlyAccess
+      # Add below policy for capacity reservation for A100
+      - Policy: arn:aws:iam::320567679581:policy/RunInstancesInCapacityReservation
+    S3Access:
+      - BucketName: fsdp-expeirments
+  Ssh:
+    KeyName: hpc-key100
+  LocalStorage:
+    RootVolume:
+      Size: 450
+  Networking:
+    SubnetId: subnet-06cb8f7d5dbb36d49
+    ElasticIp: true
+  CustomActions:
+    OnNodeConfigured:
+      Script: s3://fsdp-expeirments/head-post-install.sh
+      Args:
+        - https://github.com/perifaws/aws-parallelcluster-monitoring/tarball/main
+        - aws-parallelcluster-monitoring
+        - install-monitoring.sh
+Scheduling:
+  Scheduler: slurm
+  SlurmQueues:
+    - Name: queue0
+      ComputeSettings:
+        LocalStorage:
+          EphemeralVolume:
+            MountDir: /scratch
+      Networking:
+        SubnetIds:
+          - subnet-027814d2009a0b039
+        PlacementGroup:
+          Enabled: true
+      ComputeResources:
+        - Name: queue0-p38xlarge
+          InstanceType: p4d.24xlarge
+          #MaxCount: 2
+          #MinCount: 1
+          Efa:
+             Enabled: true
+      Iam:
+        S3Access:
+          - BucketName: fsdp-expeirments
+        AdditionalIamPolicies:
+          - Policy: arn:aws:iam::aws:policy/CloudWatchFullAccess
+          - Policy: arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+          - Policy: arn:aws:iam::aws:policy/AWSPriceListServiceFullAccess
+          - Policy: arn:aws:iam::aws:policy/AmazonSSMFullAccess
+          - Policy: arn:aws:iam::aws:policy/AWSCloudFormationReadOnlyAccess
+      CustomActions:
+        OnNodeConfigured:
+                                                                                                                                                                    58,22         66%
