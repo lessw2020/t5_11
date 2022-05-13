@@ -1,6 +1,7 @@
 Region: ap-northeast-2
 Image:
-  Os: ami-0ec1c652bf9015b83
+  Os: alinux2
+  CustomImage: ami-0ec1c652bf9015b83
 HeadNode:
   InstanceType: g4dn.12xlarge
   Iam:
