@@ -47,7 +47,7 @@ Scheduling:
         - Name: queue0-p38xlarge
           InstanceType: p4d.24xlarge
           MaxCount: 2
-          MinCount: 2
+          MinCount: 0
           Efa:
              Enabled: true
       Iam:
