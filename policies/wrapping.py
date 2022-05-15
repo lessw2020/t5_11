@@ -13,7 +13,7 @@ from torch.distributed.fsdp.fully_sharded_data_parallel import (
     MixedPrecision,
 )
 from torch.distributed.fsdp.wrap import (
-    default_auto_wrap_policy,
+    transformer_auto_wrap_policy,
     enable_wrap,
     wrap,
 )

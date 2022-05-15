@@ -39,7 +39,7 @@ from torch.distributed.fsdp import (
 
 
 from torch.distributed.fsdp.wrap import (
-    default_auto_wrap_policy,
+    transformer_auto_wrap_policy,
     enable_wrap,
     wrap,
 )
@@ -53,6 +53,7 @@ from torch.utils.data import DataLoader
 
 # from nlp import load_metric
 # from nlp import load_dataset
+from optimF import ChildTuningAdamW
 
 from sklearn.model_selection import train_test_split
 import time
@@ -413,8 +414,17 @@ def fsdp_main(args):
             external_file.close()
 
     lr = 0.0008
-    gamma = 0.7
-    optimizer = optim.AdamW(model.parameters(), lr=lr)
+    gamma = 0.85
+    if cfg.use_task_free:
+        optimizer = ChildTuningAdamW(
+            model.parameters(),
+            lr=lr,
+            weight_decay=0.01,
+            reserve_p=cfg.percent_F,
+            mode="taskfree",
+        )
+    else:
+        optimizer = optim.AdamW(model.parameters(), lr=lr)
 
     scheduler = StepLR(optimizer, step_size=1, gamma=gamma)
     epochs = cfg.num_epochs
@@ -574,7 +584,7 @@ if __name__ == "__main__":
     args = parse_args()
 
     # seed
-    torch.manual_seed(args.seed)
+    torch.manual_seed(2022)
     gpus_per_node = torch.cuda.device_count()
 
     # torch run start
