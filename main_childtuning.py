@@ -276,6 +276,87 @@ def validation(model, local_rank, rank, world_size, test_loader):
     return val_loss
 
 
+# ---------- Child Tuning - Fisher Info Matrix ------------------------------
+def get_fisher_matrix(
+    model, local_rank, rank, train_loader, sampler1, clip_grad_size=1.0, reserve_p=0.75
+):
+    """calculate fisher info matrix using one epoch of training data
+    we do not actually update anything in the model here"""
+    import numpy as np
+
+    fim_mask = dict()
+    model.train()
+
+    count_layers = 0
+    search_encoder = "encoder"
+    search_decoder = "decoder"
+
+    for name, params in model.named_parameters():
+        # print(f"--> name of layer on rank{rank} = {name}")
+        if search_encoder in name or search_decoder in name:
+            fim_mask[params] = params.new_zeros(params.size())  # make a duplicate
+
+            count_layers += 1
+            print(f"--> layer name added on rank {rank} = {name}")
+
+        print(f"--> layers in model for fim mask = {count_layers}")
+
+    # walk through an epoch, with no model updates
+    len_dataloader = len(train_loader)
+    if rank == 0:
+        print(f"--> processing for FIM - len dataloader = {len_dataloader}")
+        inner_pbar = tqdm.tqdm(
+            range(len(train_loader)), colour="yellow", desc="r0 FIM Matrix Epoch"
+        )
+
+    for batch in train_loader:
+        for key in batch.keys():
+            batch[key] = batch[key].to(local_rank)
+
+        # optimizer.zero_grad()
+        output = model(
+            input_ids=batch["source_ids"],
+            attention_mask=batch["source_mask"],
+            labels=batch["target_ids"],
+        )
+
+        loss = output["loss"]
+        loss.backward()
+
+        # capture the affected params
+        for name, params in model.named_parameters():
+            if "layer" in name:
+                torch.nn.utils.clip_grad_norm_(params, clip_grad_size)
+                fim_mask[params] += (params.grad**2) / len_dataloader
+        model.zero_grad()
+        if rank == 0:
+            inner_pbar.update(1)
+
+    if rank == 0:
+        # test_loss = ddp_loss[0] / ddp_loss[1]
+        inner_pbar.close()
+        print(f"FIM Matrix gathering completed...processing")
+
+    r = None
+    polar = 0.0
+    if len(fim_mask) > 0:
+        for key, value in fim_mask.items():
+            v = value.view(-1).cpu().numpy()
+            if r is None:
+                r = v
+            else:
+                r = np.append(r, v)
+        polar = np.percentile(r, (1 - reserve_p) * 100)
+        for k in fim_mask:
+            fim_mask[k] = fim_mask[k] >= polar
+
+        if rank == 0:
+            print(f"Fim mask completed. Polar threshold was {polar}")
+    print(f"len of fim _mask on {rank} = {len(fim_mask)}")
+
+    return fim_mask
+
+
 # ---- fsdp main ------------------------------------------------------------
 
 
@@ -388,13 +469,14 @@ def fsdp_main(args):
         model.gradient_checkpointing_enable()
         print(f"Activation checkpointing enabled\n")
 
+    # move model to gpu
+    model.to(local_rank)
+
     model = FSDP(
         model,
         auto_wrap_policy=wrapping_policy,
         mixed_precision=mp_policy,
     )
-    # move model to gpu
-    model.to(local_rank)
 
     if rank == 0 and cfg.print_sharding_plan:
         print(f"model ")
@@ -416,14 +498,43 @@ def fsdp_main(args):
 
     lr = 0.0008
     gamma = 0.85
-    if cfg.use_task_free:
-        optimizer = ChildTuningAdamW(
-            model.parameters(),
-            lr=lr,
-            weight_decay=0.01,
-            reserve_p=cfg.percent_F,
-            mode="taskfree",
-        )
+    if cfg.use_child_tuning:
+        if cfg.use_task_free:
+            optimizer = ChildTuningAdamW(
+                model.parameters(),
+                lr=lr,
+                weight_decay=0.01,
+                reserve_p=cfg.percent_F,
+                mode="taskfree",
+            )
+        elif cfg.use_fisher_matrix:
+
+            fim_mask = get_fisher_matrix(
+                model,
+                local_rank,
+                rank,
+                train_loader,
+                sampler1,
+                reserve_p=cfg.percent_F,
+            )
+
+            if rank == 0:
+                print(f"Fisher Matrix built for optimizer")
+            optimizer = ChildTuningAdamW(
+                model.parameters(),
+                lr=lr,
+                weight_decay=0.01,
+                reserve_p=cfg.percent_F,
+                mode="task",
+            )
+
+            optimizer.set_gradient_mask(fim_mask)
+
+            if rank == 0:
+                print(f"--> fim mask set for Optimizer")
+
+        else:
+            raise ValueError("child tuning turned on but no mode active...aborting")
     else:
         optimizer = optim.AdamW(model.parameters(), lr=lr)
 
