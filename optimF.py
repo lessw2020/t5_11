@@ -88,6 +88,10 @@ class ChildTuningAdamW(Optimizer):
                             grad.new_full(size=grad.size(), fill_value=self.reserve_p)
                         )
                         grad *= grad_mask.sample() / self.reserve_p
+                    else:
+                        raise ValueError(
+                            "running Child Tuning optimizer but no mode set...aborting"
+                        )
                 # =================== HACK END =======================
 
                 state = self.state[p]
