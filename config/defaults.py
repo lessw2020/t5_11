@@ -26,6 +26,7 @@ class train_config:
     # policies
     fsdp_unit_size = 1000000
     use_mixed_precision: bool = True
+
     activation_checkpointing: bool = True
 
     # datasets
@@ -47,5 +48,8 @@ class train_config:
     nccl_debug_handler: bool = True
 
     # Fine Tuning
-    use_task_free: bool = True
+    use_child_tuning: bool = True
+
+    use_task_free: bool = False
+    use_fisher_matrix: bool = True
     percent_F: float = 0.75
