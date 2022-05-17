@@ -1,9 +1,9 @@
 Region: ap-northeast-2
 Image:
   Os: alinux2
-  CustomImage: ami-0ec1c652bf9015b83
+  CustomAmi: ami-013b88f1f972940d0
 HeadNode:
-  InstanceType: g4dn.12xlarge
+  InstanceType: c6i.8xlarge
   Iam:
     AdditionalIamPolicies:
       - Policy: arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
@@ -21,7 +21,7 @@ HeadNode:
     RootVolume:
       Size: 450
   Networking:
-    SubnetId: subnet-06cb8f7d5dbb36d49
+    SubnetId: subnet-01249f73971a3f69a
     ElasticIp: true
   CustomActions:
     OnNodeConfigured:
@@ -40,7 +40,7 @@ Scheduling:
             MountDir: /scratch
       Networking:
         SubnetIds:
-          - subnet-027814d2009a0b039
+          - subnet-0fa34c4f79376c254
         PlacementGroup:
           Enabled: true
       ComputeResources:
