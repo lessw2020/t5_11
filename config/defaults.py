@@ -21,7 +21,7 @@ class train_config:
     print_sharding_plan: bool = False
 
     # dataloaders
-    num_workers_dataloader: int = 2
+    num_workers_dataloader: int = 0
 
     # policies
     fsdp_unit_size = 1000000
@@ -46,10 +46,11 @@ class train_config:
     track_memory = True
     memory_report: bool = True
     nccl_debug_handler: bool = True
+    distributed_debug: bool = True
 
     # Fine Tuning
     use_child_tuning: bool = True
 
-    use_task_free: bool = False
-    use_fisher_matrix: bool = True
-    percent_F: float = 0.75
+    use_task_free: bool = True
+    use_fisher_matrix: bool = False
+    percent_F: float = 0.3

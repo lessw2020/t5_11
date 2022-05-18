@@ -146,10 +146,14 @@ def setup(rank, world_size, cfg):
     dist.init_process_group("nccl")  # , rank=rank, world_size=world_size)
 
 
-def setup_environ_flags(cfg):
+def setup_environ_flags(cfg, rank):
     os.environ["TORCH_SHOW_CPP_STACKTRACES"] = str(1)
     if cfg.nccl_debug_handler:
         os.environ["NCCL_ASYNC_ERROR_HANDLING"] = str(1)
+    if cfg.distributed_debug:
+        os.environ["TORCH_DISTRIBUTED_DEBUG"] = "DETAIL"
+        if rank == 0:
+            print(f"--> running with torch dist debug set to detail")
 
 
 def cleanup():
@@ -166,7 +170,7 @@ def setup_tasks(rank, world_size, cfg):
     setup(rank, world_size, cfg)
     # clear_gpu_cache() - need to call torch set device first?
     # set_printing()
-    setup_environ_flags(cfg)
+    setup_environ_flags(cfg, rank)
 
 
 # ----------  Training ----------------------------------------------------------
@@ -224,7 +228,7 @@ def train(
         if profiler:
             profiler.step()
 
-    dist.reduce(ddp_loss, 0, op=dist.ReduceOp.SUM)
+    # dist.reduce(ddp_loss, 0, op=dist.ReduceOp.SUM)
     train_accuracy = ddp_loss[0] / ddp_loss[1]
     if rank == 0:
         inner_pbar.close()
@@ -266,7 +270,7 @@ def validation(model, local_rank, rank, world_size, test_loader):
             # ddp_loss[1] += pred.eq(batch["target_ids"].view_as(pred)).sum().item()
             # ddp_loss[2] += len(batch)
 
-    dist.reduce(ddp_loss, 0, op=dist.ReduceOp.SUM)
+    # dist.reduce(ddp_loss, 0, op=dist.ReduceOp.SUM)
     val_loss = ddp_loss[0] / ddp_loss[1]
 
     if rank == 0:
@@ -365,7 +369,7 @@ def fsdp_main(args):
     test_kwargs = {"batch_size": val_batch_size, "sampler": sampler2}
     cuda_kwargs = {
         "num_workers": cfg.num_workers_dataloader,
-        "pin_memory": True,
+        "pin_memory": False,
         "shuffle": False,
     }
     train_kwargs.update(cuda_kwargs)
@@ -507,6 +511,10 @@ def fsdp_main(args):
             # update curr best val accuracy
 
             # save
+            # todo -remove
+            dist.barrier()
+            if rank == 0:
+                print(f"--> dist barrier activated")
             if rank == 0:
                 print(f"--> entering save model state...")
             save_policy = FullStateDictConfig(offload_to_cpu=True, rank0_only=True)
@@ -529,6 +537,10 @@ def fsdp_main(args):
                 torch.save(cpu_state, model_save_name)
 
                 print(f"--> saved {model_save_name} to disk")
+            # todo- remove
+            dist.barrier()
+            if rank == 0:
+                print(f"--> dist barrier removed.")
         # announce new val loss record:
         if rank == 0 and curr_val_loss < best_val_loss:
 
