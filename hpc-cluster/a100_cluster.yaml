@@ -13,8 +13,8 @@ HeadNode:
       - Policy: arn:aws:iam::aws:policy/AWSCloudFormationReadOnlyAccess
       # Add below policy for capacity reservation for A100
       - Policy: arn:aws:iam::320567679581:policy/RunInstancesInCapacityReservation
-    S3Access:
-      - BucketName: fsdp-expeirments
+    #S3Access:
+    #  - BucketName: fsdp-expeirments
   Ssh:
     KeyName: hpc-key100
   LocalStorage:
@@ -31,6 +31,8 @@ Scheduling:
         LocalStorage:
           EphemeralVolume:
             MountDir: /scratch
+          RootVolume:
+            Size: 100
       Networking:
         SubnetIds:
           - subnet-0fa34c4f79376c254
@@ -44,17 +46,14 @@ Scheduling:
           Efa:
              Enabled: true
       Iam:
-        S3Access:
-          - BucketName: fsdp-expeirments
+        #S3Access:
+        #  - BucketName: fsdp-expeirments
         AdditionalIamPolicies:
           - Policy: arn:aws:iam::aws:policy/CloudWatchFullAccess
           - Policy: arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
           - Policy: arn:aws:iam::aws:policy/AWSPriceListServiceFullAccess
           - Policy: arn:aws:iam::aws:policy/AmazonSSMFullAccess
           - Policy: arn:aws:iam::aws:policy/AWSCloudFormationReadOnlyAccess
-Tags:
-  - Key: "Grafana"
-    Value: "true"
 SharedStorage:
   - MountDir: /shared
     Name: Ebs0
@@ -69,4 +68,4 @@ SharedStorage:
     FsxLustreSettings:
       StorageCapacity: 1200
       DeploymentType: SCRATCH_2  # PERSISTENT_1 | SCRATCH_1 | SCRATCH_2
-      ImportPath: s3://fsdp-expeirments
+      #ImportPath: s3://fsdp-expeirments
