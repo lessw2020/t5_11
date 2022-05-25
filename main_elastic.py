@@ -228,7 +228,7 @@ def train(
         if profiler:
             profiler.step()
 
-    # dist.reduce(ddp_loss, 0, op=dist.ReduceOp.SUM)
+    dist.all_reduce(ddp_loss, op=dist.ReduceOp.SUM)
     train_accuracy = ddp_loss[0] / ddp_loss[1]
     if rank == 0:
         inner_pbar.close()
@@ -270,7 +270,7 @@ def validation(model, local_rank, rank, world_size, test_loader):
             # ddp_loss[1] += pred.eq(batch["target_ids"].view_as(pred)).sum().item()
             # ddp_loss[2] += len(batch)
 
-    # dist.reduce(ddp_loss, 0, op=dist.ReduceOp.SUM)
+    dist.all_reduce(ddp_loss, op=dist.ReduceOp.SUM)
     val_loss = ddp_loss[0] / ddp_loss[1]
 
     if rank == 0:
@@ -484,10 +484,6 @@ def fsdp_main(args):
             sampler=sampler1,
             profiler=torch_profiler,
         )
-        if cfg.block_for_validation:
-            dist.barrier()
-            if rank == 0:
-                print(f"--> blocking ranks for pre-validation synching...")
 
         if cfg.run_validation:
             curr_val_loss = validation(model, local_rank, rank, world_size, test_loader)
@@ -511,10 +507,6 @@ def fsdp_main(args):
             # update curr best val accuracy
 
             # save
-            # todo -remove
-            dist.barrier()
-            if rank == 0:
-                print(f"--> dist barrier activated")
             if rank == 0:
                 print(f"--> entering save model state...")
             save_policy = FullStateDictConfig(offload_to_cpu=True, rank0_only=True)
@@ -537,10 +529,7 @@ def fsdp_main(args):
                 torch.save(cpu_state, model_save_name)
 
                 print(f"--> saved {model_save_name} to disk")
-            # todo- remove
-            dist.barrier()
-            if rank == 0:
-                print(f"--> dist barrier removed.")
+
         # announce new val loss record:
         if rank == 0 and curr_val_loss < best_val_loss:
 

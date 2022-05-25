@@ -231,7 +231,8 @@ def train(
         if profiler:
             profiler.step()
 
-    dist.reduce(ddp_loss, 0, op=dist.ReduceOp.SUM)
+    dist.all_reduce(ddp_loss, op=dist.ReduceOp.SUM)
+
     train_accuracy = ddp_loss[0] / ddp_loss[1]
     if rank == 0:
         inner_pbar.close()
@@ -273,7 +274,8 @@ def validation(model, local_rank, rank, world_size, test_loader):
             # ddp_loss[1] += pred.eq(batch["target_ids"].view_as(pred)).sum().item()
             # ddp_loss[2] += len(batch)
 
-    dist.reduce(ddp_loss, 0, op=dist.ReduceOp.SUM)
+    dist.all_reduce(ddp_loss, op=dist.ReduceOp.SUM)
+    
     val_loss = ddp_loss[0] / ddp_loss[1]
 
     if rank == 0:
