@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from torch.distributed.fsdp import ShardingStrategy
 
 
 @dataclass
@@ -7,7 +8,7 @@ class train_config:
     host_port: str = "12368"
 
     # model
-    model_name = "google/t5-v1_1-xl"  # "google/t5-v1_1-small"
+    model_name = "t5-large"  # "google/t5-v1_1-small"
     tokenizer = "t5-large"
     # available models
     ## t5-base
@@ -18,6 +19,9 @@ class train_config:
     # google/t5-v1_1-xxl #11b
     save_model: bool = True
     model_checkpoint = "t5_small_save.pt"
+
+    # sharding policy
+    sharding_strategy: ShardingStrategy = ShardingStrategy.NO_SHARD
     print_sharding_plan: bool = False
 
     # dataloaders
@@ -30,12 +34,12 @@ class train_config:
     activation_checkpointing: bool = True
 
     # datasets
-    dataset_train = "datasets_grammar/gtrain_150K.csv"  # grammar_13k.csv
+    dataset_train = "datasets_grammar/grammar_train.csv"
     dataset_test = "datasets_grammar/grammar_validation.csv"
 
     # training
     batch_size: int = 8
-    num_epochs: int = 14
+    num_epochs: int = 2
 
     # validation
     run_validation: bool = True

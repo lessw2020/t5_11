@@ -392,13 +392,22 @@ def fsdp_main(args):
         model.gradient_checkpointing_enable()
         print(f"Activation checkpointing enabled\n")
 
+    # --- sharding policy
+    model_sharding_strategy = (
+        cfg.sharding_strategy or ShardingStrategy.FULL_SHARD
+    )  # use config, but default to normal if not available
+    if rank == 0:
+        print(f"Sharding strategy = {model_sharding_strategy}")
+
+    # move model to gpu
+    model.to(local_rank)
+
     model = FSDP(
         model,
         auto_wrap_policy=wrapping_policy,
         mixed_precision=mp_policy,
+        sharding_strategy=model_sharding_strategy,
     )
-    # move model to gpu
-    model.to(local_rank)
 
     if rank == 0 and cfg.print_sharding_plan:
         print(f"model ")
