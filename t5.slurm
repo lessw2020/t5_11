@@ -8,6 +8,9 @@
 
 #SBATCH --gpus-per-task=8
 
+#SBATCH --cpus-per-task=96
+
+
 nodes=( $( scontrol show hostnames $SLURM_JOB_NODELIST ) )
 nodes_array=($nodes)
 head_node=${nodes_array[0]}
