@@ -400,13 +400,14 @@ def fsdp_main(args):
         print(f"Sharding strategy = {model_sharding_strategy}")
 
     # move model to gpu
-    model.to(local_rank)
+    # model.to(local_rank)
 
     model = FSDP(
         model,
         auto_wrap_policy=wrapping_policy,
         mixed_precision=mp_policy,
         sharding_strategy=model_sharding_strategy,
+        device_id=torch.cuda.current_device(),  # streaming init
     )
 
     if rank == 0 and cfg.print_sharding_plan:
@@ -429,14 +430,15 @@ def fsdp_main(args):
 
     lr = 0.0008
     gamma = 0.85
-    if cfg.use_task_free:
-        optimizer = ChildTuningAdamW(
-            model.parameters(),
-            lr=lr,
-            weight_decay=0.01,
-            reserve_p=cfg.percent_F,
-            mode="taskfree",
-        )
+    if cfg.use_child_tuning:
+        if cfg.use_task_free:
+            optimizer = ChildTuningAdamW(
+                model.parameters(),
+                lr=lr,
+                weight_decay=0.01,
+                reserve_p=cfg.percent_F,
+                mode="taskfree",
+            )
     else:
         optimizer = optim.AdamW(model.parameters(), lr=lr)
 

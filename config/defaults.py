@@ -8,7 +8,7 @@ class train_config:
     host_port: str = "12368"
 
     # model
-    model_name = "t5-large"  # "google/t5-v1_1-small"
+    model_name = "google/t5-v1_1-large"  # "google/t5-v1_1-small"
     tokenizer = "t5-large"
     # available models
     ## t5-base
@@ -39,7 +39,7 @@ class train_config:
 
     # training
     batch_size: int = 8
-    num_epochs: int = 2
+    num_epochs: int = 1
 
     # validation
     run_validation: bool = True
