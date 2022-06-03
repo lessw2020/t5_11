@@ -17,8 +17,10 @@ class train_config:
     # google/t5-v1_1-large
     # google/t5-v1_1-xl  #3b
     # google/t5-v1_1-xxl #11b
+
+    # save models
     save_model: bool = True
-    model_checkpoint = "t5_small_save.pt"
+    save_folder = "model_checkpoints"
 
     # sharding policy
     sharding_strategy: ShardingStrategy = ShardingStrategy.NO_SHARD
@@ -29,7 +31,7 @@ class train_config:
 
     # policies
     fsdp_unit_size = 1000000
-    use_mixed_precision: bool = True
+    use_mixed_precision: bool = False
 
     activation_checkpointing: bool = True
 
@@ -39,7 +41,7 @@ class train_config:
 
     # training
     batch_size: int = 8
-    num_epochs: int = 1
+    num_epochs: int = 2
 
     # validation
     run_validation: bool = True

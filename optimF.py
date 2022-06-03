@@ -77,7 +77,7 @@ class ChildTuningAdamW(Optimizer):
                         "Adam does not support sparse gradients, please consider SparseAdam instead"
                     )
 
-                # =================== HACK BEGIN =======================
+                # =================== Child Tuning BEGIN =======================
                 if self.mode is not None:
                     if self.mode == "task":
                         if p in self.gradient_mask:
@@ -92,7 +92,7 @@ class ChildTuningAdamW(Optimizer):
                         raise ValueError(
                             "running Child Tuning optimizer but no mode set...aborting"
                         )
-                # =================== HACK END =======================
+                # =================== Child Tuning END =======================
 
                 state = self.state[p]
 

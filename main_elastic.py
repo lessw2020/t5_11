@@ -72,6 +72,7 @@ import config
 # some globals
 g_port = "12369"
 g_addr = "localhost"
+g_gigabyte = 1024**3
 
 
 def _is_rank_0():
@@ -171,6 +172,13 @@ def setup_tasks(rank, world_size, cfg):
     # clear_gpu_cache() - need to call torch set device first?
     # set_printing()
     setup_environ_flags(cfg, rank)
+
+
+def format_metrics_to_gb(item):
+    """quick function to format numbers to gigabyte and round to 4 digit precision"""
+    metric_num = item / g_gigabyte
+    metric_num = round(metric_num, ndigits=4)
+    return metric_num
 
 
 # ----------  Training ----------------------------------------------------------
@@ -511,8 +519,12 @@ def fsdp_main(args):
                 val_acc_tracking.append(curr_val_loss.item())
 
             if cfg.track_memory:
-                mem_alloc_tracker.append(torch.cuda.memory_allocated())
-                mem_reserved_tracker.append(torch.cuda.memory_reserved())
+                mem_alloc_tracker.append(
+                    format_metrics_to_gb(torch.cuda.memory_allocated())
+                )
+                mem_reserved_tracker.append(
+                    format_metrics_to_gb(torch.cuda.memory_reserved())
+                )
 
         if cfg.save_model and curr_val_loss < best_val_loss:
             # update curr best val accuracy
