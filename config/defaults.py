@@ -23,7 +23,7 @@ class train_config:
     save_folder = "model_checkpoints"
 
     # sharding policy
-    sharding_strategy: ShardingStrategy = ShardingStrategy.NO_SHARD
+    sharding_strategy: ShardingStrategy = ShardingStrategy.FULL_SHARD
     print_sharding_plan: bool = False
 
     # dataloaders
@@ -36,16 +36,16 @@ class train_config:
     activation_checkpointing: bool = True
 
     # datasets
-    dataset_train = "datasets_grammar/grammar_train.csv"
+    dataset_train = "datasets_grammar/gtrain_150K.csv"
     dataset_test = "datasets_grammar/grammar_validation.csv"
 
     # training
-    batch_size: int = 8
-    num_epochs: int = 2
+    batch_size: int = 16
+    num_epochs: int = 12
 
     # validation
     run_validation: bool = True
-    val_batch_size = 4
+    val_batch_size = 8
     block_for_validation: bool = False
 
     # logging
@@ -55,8 +55,10 @@ class train_config:
     distributed_debug: bool = True
 
     # Fine Tuning
-    use_child_tuning: bool = True
+    use_child_tuning: bool = False
+    use_mirror_optimizer = True
+    lr: float = 3e-5
 
     use_task_free: bool = True
     use_fisher_matrix: bool = False
-    percent_F: float = 0.3
+    percent_F: float = 0.35

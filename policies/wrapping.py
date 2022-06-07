@@ -1,5 +1,6 @@
 # holds various wrapping policies for fsdp
 
+
 import torch.distributed as dist
 import torch.nn as nn
 import torch
@@ -17,35 +18,22 @@ from torch.distributed.fsdp.wrap import (
     enable_wrap,
     wrap,
 )
+
 import functools
 from typing import Type
 
 
-def transformer_wrapper(
-    module: nn.Module,
-    recurse: bool,
-    unwrapped_params: int,
-    transformer_layer_cls: Type[nn.Module],
-    min_num_params: int = int(1e8),
-) -> bool:
-
-    """policy for wrapping transformers with shared embedding
-    shared embeddings will be housed in the outermost layer, thus available to all internal
-    fsdp units
+def get_t5_wrapper():
+    """we register our main layer class and use the fsdp transformer wrapping policy
+    ensures embedding layers are in the root fsdp unit for shared access and that fsdp units map to transformer layers
     """
-    is_large = unwrapped_params >= min_num_params
-    if recurse:
-        # always recurse
-        return True
-    else:
-        # if not recursing, decide whether we should wrap for the leaf node or reminder
-        return is_large and isinstance(module, transformer_layer_cls)
+    # ====   use new transformer wrapper
 
-
-def get_t5_wrapper(min_unit_params=1000000):
-    fsdp_wrapping_policy = functools.partial(
-        transformer_wrapper,
-        min_num_params=min_unit_params,
-        transformer_layer_cls=T5Block,
+    t5_auto_wrap_policy = functools.partial(
+        transformer_auto_wrap_policy,
+        transformer_layer_cls={
+            T5Block,
+        },
     )
-    return fsdp_wrapping_policy
+
+    return t5_auto_wrap_policy

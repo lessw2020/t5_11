@@ -69,9 +69,9 @@ import tqdm
 # config
 import config
 
+from madgrad import MirrorMADGRAD as mirror
+
 # some globals
-g_port = "12369"
-g_addr = "localhost"
 g_gigabyte = 1024**3
 
 
@@ -90,23 +90,15 @@ def get_date_of_run():
 
 def parse_args():
     parser = argparse.ArgumentParser(description="PyTorch fsdp T5.11 Example")
-    parser.add_argument("--save-dir", default="/model_chkpt", type=str)
+    """parser.add_argument("--save-dir", default="/model_chkpt", type=str)
     parser.add_argument(
         "--save-model",
         action="store_true",
         default=False,
         help="For Saving the current Model",
     )
-    parser.add_argument(
-        "--seed", type=int, default=1, metavar="S", help="random seed (default: 2022)"
-    )
-    parser.add_argument(
-        "--epochs",
-        type=int,
-        default=1,
-        metavar="N",
-        help="number of epochs to train (default: 14)",
-    )
+    """
+
     args = parser.parse_args()
     return args
 
@@ -293,6 +285,9 @@ def validation(model, local_rank, rank, world_size, test_loader):
 
 def fsdp_main(args):
     """main process within each process"""
+    torch.cuda.manual_seed(22)
+    torch.manual_seed(22)
+
     cfg = config.train_config()  # loads from defaults
 
     # torchrun specific
@@ -320,7 +315,7 @@ def fsdp_main(args):
         print(f"--> training for model {model_name}")
 
     printable_model_name = str.replace(model_name, "/", "=")
-    save_name = printable_model_name + "-"
+    file_save_name = "800M-whole-model-"  # printable_model_name + "-"
 
     # t5-base
     # google/t5-v1_1-small
@@ -447,8 +442,15 @@ def fsdp_main(args):
                 reserve_p=cfg.percent_F,
                 mode="taskfree",
             )
+            print(f"--> child free tuning with {cfg.percent_F} percentage ")
+    elif cfg.use_mirror_optimizer:
+        optimizer = mirror(model.parameters(), lr=cfg.lr)
+        if rank == 0:
+            print(f"--> using Mirror optimizer with lr = {cfg.lr}")
+
     else:
         optimizer = optim.AdamW(model.parameters(), lr=lr)
+        print(f"--> AdamW whole model tuning with ")
 
     scheduler = StepLR(optimizer, step_size=1, gamma=gamma)
     epochs = cfg.num_epochs
@@ -547,11 +549,11 @@ def fsdp_main(args):
                 currEpoch = (
                     "-" + str(epoch) + "-" + str(round(curr_val_loss.item(), 4)) + ".pt"
                 )
-                model_save_name = "-" + time_of_run + "-" + save_name + currEpoch
+                save_name = file_save_name + "-" + time_of_run + "-" + currEpoch
 
-                torch.save(cpu_state, model_save_name)
+                torch.save(cpu_state, save_name)
 
-                print(f"--> saved {model_save_name} to disk")
+                print(f"--> saved {save_name} to disk")
 
         # announce new val loss record:
         if rank == 0 and curr_val_loss < best_val_loss:

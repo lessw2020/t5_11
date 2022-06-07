@@ -111,7 +111,7 @@ def parse_args():
 
 
 # ----------------   Main functions --------------------
-def get_policies(cfg, fsdp_unit_params=1000000):
+def get_policies(cfg):
 
     """establish current policies for mixed precision and fsdp wrapping"""
 
@@ -133,7 +133,7 @@ def get_policies(cfg, fsdp_unit_params=1000000):
     # print(f"**overriding mp to fp16 - remove")
     # mixed_precision_policy = policies.fpSixteen
 
-    wrapping_policy = policies.get_t5_wrapper(fsdp_unit_params)
+    wrapping_policy = policies.get_t5_wrapper()
 
     return mixed_precision_policy, wrapping_policy
 
@@ -275,7 +275,7 @@ def validation(model, local_rank, rank, world_size, test_loader):
             # ddp_loss[2] += len(batch)
 
     dist.all_reduce(ddp_loss, op=dist.ReduceOp.SUM)
-    
+
     val_loss = ddp_loss[0] / ddp_loss[1]
 
     if rank == 0:
@@ -313,7 +313,7 @@ def fsdp_main(args):
 
     val_batch_size = cfg.val_batch_size
 
-    mp_policy, wrapping_policy = get_policies(cfg, fsdp_unit_params)
+    mp_policy, wrapping_policy = get_policies(cfg)
 
     model_name = cfg.model_name  # "google/t5-v1_1-small"  #   #
     if rank == 0:
@@ -404,6 +404,7 @@ def fsdp_main(args):
         model,
         auto_wrap_policy=wrapping_policy,
         mixed_precision=mp_policy,
+        # todo
     )
     # move model to gpu
     model.to(local_rank)
