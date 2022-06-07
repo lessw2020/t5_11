@@ -396,18 +396,21 @@ def fsdp_main(args):
 
     # model = model.to(rank)
     # model = DDP(model)
-    if cfg.activation_checkpointing:
+    if cfg.hf_activation_checkpointing:
         model.gradient_checkpointing_enable()
-        print(f"Activation checkpointing enabled\n")
+        print(f"HF Activation checkpointing enabled\n")
 
     model = FSDP(
         model,
         auto_wrap_policy=wrapping_policy,
         mixed_precision=mp_policy,
-        # todo
+        device_id=torch.cuda.current_device(),
     )
     # move model to gpu
-    model.to(local_rank)
+    # model.to(local_rank)
+
+    if cfg.fsdp_activation_checkpointing:
+        policies.apply_checkpointing(model)
 
     if rank == 0 and cfg.print_sharding_plan:
         print(f"model ")
