@@ -8,7 +8,7 @@ from torch.distributed.fsdp import (
     # ShardingStrategy,
 )
 
-#
+# requires grad scaler in main loop
 fpSixteen = MixedPrecision(
     param_dtype=torch.float16,
     # Gradient communication precision.

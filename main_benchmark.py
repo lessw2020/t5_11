@@ -122,12 +122,17 @@ def get_policies(cfg):
     if cfg.use_mixed_precision:
         bf16_ready = verify.bf16_ready
 
-        if bf16_ready:
+        if bf16_ready and not cfg.use_fp16:
             mixed_precision_policy = policies.bfSixteen
             print(f"bFloat16 enabled for mixed precision - using bfSixteen policy")
+        elif cfg.use_fp16:
+            mixed_precision_policy = policies.fpSixteen
+            print(f"FP16 enabled. ")
         else:
             # mixed_precision_policy = policies.fpSixteen
-            print(f"bFloat16 support not present. Not using for mixed precision")
+            print(
+                f"bFloat16 support not present. Will use FP32, and not mixed precision"
+            )
 
     # wrapping policy -------
     # print(f"**overriding mp to fp16 - remove")
@@ -178,7 +183,7 @@ def setup_tasks(rank, world_size, cfg):
 
 # ----------  Training ----------------------------------------------------------
 def train(
-    args,
+    cfg,
     model,
     local_rank,
     rank,
@@ -188,6 +193,7 @@ def train(
     epoch,
     sampler=None,
     profiler=None,
+    scaler=None,
 ):
     model.train()
     ddp_loss = torch.zeros(2).to(local_rank)
@@ -222,8 +228,14 @@ def train(
         # print(output.keys())
         # print("##############################")
         loss = output["loss"]
-        loss.backward()
-        optimizer.step()
+        if scaler:
+            scaler.scale(loss).backward()
+            scaler.step(optimizer)
+            scaler.update()  # adjust scaling for next minibatch
+        else:
+            loss.backward()
+            optimizer.step()
+
         ddp_loss[0] += loss.item()
         ddp_loss[1] += len(batch)
         if rank == 0:
@@ -246,7 +258,7 @@ def train(
 # ---- Validation ---------------
 
 
-def validation(model, local_rank, rank, world_size, test_loader):
+def validation(cfg, model, local_rank, rank, world_size, test_loader, scaler):
     model.eval()
     correct = 0
     ddp_loss = torch.zeros(3).to(local_rank)
@@ -313,7 +325,14 @@ def fsdp_main(args):
 
     val_batch_size = cfg.val_batch_size
 
+    scaler = None  # only used for fp16
+
     mp_policy, wrapping_policy = get_policies(cfg)
+
+    if cfg.use_fp16:
+        from torch.distributed.fsdp.sharded_grad_scaler import ShardedGradScaler
+
+        scaler = ShardedGradScaler()
 
     model_name = cfg.model_name  # "google/t5-v1_1-small"  #   #
     if rank == 0:
@@ -486,7 +505,7 @@ def fsdp_main(args):
 
             t0 = time.time()
         train_accuracy = train(
-            args,
+            cfg,
             model,
             local_rank,
             rank,
@@ -496,6 +515,7 @@ def fsdp_main(args):
             epoch,
             sampler=sampler1,
             profiler=torch_profiler,
+            scaler=scaler,
         )
         if cfg.block_for_validation:
             dist.barrier()
@@ -503,7 +523,9 @@ def fsdp_main(args):
                 print(f"--> blocking ranks for pre-validation synching...")
 
         if cfg.run_validation:
-            curr_val_loss = validation(model, local_rank, rank, world_size, test_loader)
+            curr_val_loss = validation(
+                cfg, model, local_rank, rank, world_size, test_loader, scaler=scaler
+            )
 
         scheduler.step()
 

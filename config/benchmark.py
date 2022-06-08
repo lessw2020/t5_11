@@ -25,10 +25,11 @@ class benchmark_config:
 
     # policies
     fsdp_unit_size = 1000000
-    use_mixed_precision: bool = True
+    use_mixed_precision: bool = False
+    use_fp16: bool = False
 
     hf_activation_checkpointing: bool = False
-    fsdp_activation_checkpointing: bool = True
+    fsdp_activation_checkpointing: bool = False
 
     # datasets
     dataset_train = "datasets_grammar/grammar_train.csv"  # grammar_13k.csv
