@@ -126,7 +126,7 @@ def get_policies(cfg, fsdp_unit_params=1000000):
     # print(f"**overriding mp to fp16 - remove")
     # mixed_precision_policy = policies.fpSixteen
 
-    wrapping_policy = policies.get_t5_wrapper(fsdp_unit_params)
+    wrapping_policy = policies.get_t5_wrapper()
 
     return mixed_precision_policy, wrapping_policy
 

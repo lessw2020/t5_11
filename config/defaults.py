@@ -8,7 +8,7 @@ class train_config:
     host_port: str = "12368"
 
     # model
-    model_name = "google/t5-v1_1-large"  # "google/t5-v1_1-small"
+    model_name = "google/t5-v1_1-xl"  # "google/t5-v1_1-small"
     tokenizer = "t5-large"
     # available models
     ## t5-base
@@ -31,7 +31,7 @@ class train_config:
 
     # policies
     fsdp_unit_size = 1000000
-    use_mixed_precision: bool = False
+    use_mixed_precision: bool = True
 
     activation_checkpointing: bool = True
 
@@ -40,7 +40,7 @@ class train_config:
     dataset_test = "datasets_grammar/grammar_validation.csv"
 
     # training
-    batch_size: int = 16
+    batch_size: int = 32
     num_epochs: int = 12
 
     # validation
@@ -55,9 +55,9 @@ class train_config:
     distributed_debug: bool = True
 
     # Fine Tuning
-    use_child_tuning: bool = False
-    use_mirror_optimizer = True
-    lr: float = 3e-5
+    use_child_tuning: bool = True
+    use_mirror_optimizer = False
+    lr: float = 4e-8
 
     use_task_free: bool = True
     use_fisher_matrix: bool = False
