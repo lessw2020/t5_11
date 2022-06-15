@@ -5,6 +5,9 @@ Image:
 HeadNode:
   InstanceType: c6i.8xlarge
   Iam:
+    S3Access:
+      - BucketName: s3-cluster-east-bucket
+        EnableWriteAccess: true
     AdditionalIamPolicies:
       - Policy: arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
       - Policy: arn:aws:iam::aws:policy/CloudWatchFullAccess
@@ -21,8 +24,6 @@ HeadNode:
   CustomActions:
     OnNodeConfigured:
       Script: s3://s3-cluster-east-bucket/postinstall.sh
-  S3Access:
-     - BucketName: s3-cluster-east-bucket
   Ssh:
     KeyName: hpc-east
   LocalStorage:
@@ -45,14 +46,15 @@ Scheduling:
         SubnetIds:
           - subnet-0742014a7c48f07d4
         PlacementGroup:
-          Enabled: true
+          Enabled: false
       ComputeResources:
         - Name: train-p4d24xlarge
           InstanceType: p4d.24xlarge
-          MaxCount: 2
-          MinCount: 2
+          MaxCount: 1
+          MinCount: 0
           Efa:
-             Enabled: true
+            Enabled: true
+            GdrSupport: true
       Iam:
         #S3Access:
         #  - BucketName: fsdp-expeirments
