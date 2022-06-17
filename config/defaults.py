@@ -39,7 +39,9 @@ class train_config:
     fsdp_unit_size = 1000000
     use_mixed_precision: bool = True
 
-    activation_checkpointing: bool = False
+    # activation checkpointing
+    hf_activation_checkpointing: bool = True
+    fsdp_activation_checkpointing: bool = False
 
     # datasets
     dataset_train = "datasets_grammar/grammar_train.csv"
@@ -47,7 +49,7 @@ class train_config:
 
     # training
     batch_size: int = 32
-    num_epochs: int = 5
+    num_epochs: int = 1
 
     # validation
     run_validation: bool = True
