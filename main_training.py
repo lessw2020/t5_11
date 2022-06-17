@@ -555,19 +555,6 @@ def fsdp_main(args):
             print(
                 f"CUDA Memory Summary After Last training:\n {torch.cuda.memory_summary()}"
             )
-        # print(
-        # f"Cuda event elapsed time: {init_start_event.elapsed_time(init_end_event) / 1000}sec"
-        # )
-        # print(f"{model}")
-
-        # save block
-        # save_model = cfg.save_model
-
-        # debug hang
-        # runs on all ranks
-        # print(f"rank {rank} calling barrier")
-        # dist.barrier()
-        # print(f"rank {rank} done w barrier, calling state_dict")
 
     dist.barrier()
     cleanup()
@@ -580,34 +567,10 @@ if __name__ == "__main__":
 
     args = parse_args()
 
-    # seed
-    torch.manual_seed(2022)
     gpus_per_node = torch.cuda.device_count()
 
     # torch run start
     fsdp_main(args)
 
     # cache workaround
-    """ dataset_name = "grammar_train.csv"
-    full_path_dataset = Path.cwd()/'datasets_grammar'/dataset_name
-
-    temp_full_dataset = load_dataset(
-        "csv",
-        data_files={
-            "train": [full_path_dataset]
-        },  # "eval": "grammar_validation.csv"},
-        delimiter=",",
-    )
-    print(f"temp dset loaded in main = len {len(temp_full_dataset)}")
     
-
-    mp.spawn(
-        fsdp_main,
-        args=(
-            gpus_per_node,
-            args,
-        ),
-        nprocs=gpus_per_node,
-        join=True,
-    )
-    """
