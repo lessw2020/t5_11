@@ -69,6 +69,9 @@ import tqdm
 # config
 import config
 
+import model_checkpoints
+from collections import deque
+
 from madgrad import MirrorMADGRAD as mirror
 
 # some globals
@@ -466,6 +469,8 @@ def fsdp_main(args):
         dur = []
         train_acc_tracking = []
         val_acc_tracking = []
+        dq = deque(maxlen=cfg.checkpoint_max_save_count+1)
+        
         training_start_time = time.time()
 
     torch_profiler = None
@@ -554,6 +559,10 @@ def fsdp_main(args):
                 torch.save(cpu_state, save_name)
 
                 print(f"--> saved {save_name} to disk")
+
+                dq.append(save_name)
+                # only keep a rolling number of model files to avoid excessive disk space use
+                model_checkpoints.prune_checkpoints(rank, dq, cfg)
 
         # announce new val loss record:
         if rank == 0 and curr_val_loss < best_val_loss:

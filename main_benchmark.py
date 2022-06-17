@@ -208,7 +208,7 @@ def train(
         for key in batch.keys():
             batch[key] = batch[key].to(local_rank)
 
-        """print("************************")
+        print("************************")
         print(
             "train_loader",
             type(batch),
@@ -217,7 +217,7 @@ def train(
             batch["target_ids"].size(),
         )
         print("************************")
-        """
+
         optimizer.zero_grad()
         output = model(
             input_ids=batch["source_ids"],
