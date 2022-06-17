@@ -520,7 +520,7 @@ def fsdp_main(args):
                 print(f"--> saved {save_name} to disk")
 
                 dq.append(save_name)
-                print(f"--> file dq contents = {dq}")
+
                 # only keep a rolling number of model files to avoid excessive disk space use
                 model_checkpoints.prune_checkpoints(rank, dq, cfg)
 
