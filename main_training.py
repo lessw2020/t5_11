@@ -41,11 +41,6 @@ from torch.distributed.fsdp.wrap import (
     wrap,
 )
 
-# activation checkpointing
-from torch.distributed.algorithms._checkpoint.checkpoint_wrapper import (
-    checkpoint_wrapper,
-    CheckpointImpl,
-)
 
 from policies import mixed_precision
 
@@ -54,8 +49,7 @@ from torch.utils.data import DataLoader
 from pathlib import Path
 from torch.utils.data import DataLoader
 
-# from nlp import load_metric
-# from nlp import load_dataset
+
 from ChildTuningOptimizer import ChildTuningAdamW
 
 from sklearn.model_selection import train_test_split
@@ -311,7 +305,12 @@ def fsdp_main(args):
     # grammar correction
     tokenizer = AutoTokenizer.from_pretrained(cfg.tokenizer, model_max_length=512)
 
-    model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
+    hf_cache = True
+
+    if cfg.hf_activation_checkpointing:
+        hf_cache = False
+
+    model = AutoModelForSeq2SeqLM.from_pretrained(model_name, use_cache=hf_cache)
 
     # summarization
     # model = T5ForConditionalGeneration.from_pretrained(model_name)
@@ -364,10 +363,13 @@ def fsdp_main(args):
 
     if cfg.hf_activation_checkpointing and not cfg.fsdp_activation_checkpointing:
         model.gradient_checkpointing_enable()
-        print(f"HF Activation checkpointing enabled\n")
+        if rank == 0:
+            print(f"HF Activation checkpointing enabled\n")
 
     if cfg.fsdp_activation_checkpointing:
-        print(f"--> fsdp activation checkpointing enabled...but not impl yet!")
+        policies.apply_checkpointing(model)
+        if rank == 0:
+            print(f"--> fsdp activation checkpointing enabled...")
 
     # --- sharding policy
     model_sharding_strategy = (
