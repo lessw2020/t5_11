@@ -122,10 +122,6 @@ def get_policies(cfg, fsdp_unit_params=1000000):
             # mixed_precision_policy = policies.fpSixteen
             print(f"bFloat16 support not present. Not using for mixed precision")
 
-    # wrapping policy -------
-    # print(f"**overriding mp to fp16 - remove")
-    # mixed_precision_policy = policies.fpSixteen
-
     wrapping_policy = policies.get_t5_wrapper()
 
     return mixed_precision_policy, wrapping_policy
@@ -199,25 +195,13 @@ def train(
         for key in batch.keys():
             batch[key] = batch[key].to(local_rank)
 
-        """print("************************")
-        print(
-            "train_loader",
-            type(batch),
-            batch["source_ids"].size(),
-            batch["source_mask"].size(),
-            batch["target_ids"].size(),
-        )
-        print("************************")
-        """
         optimizer.zero_grad()
         output = model(
             input_ids=batch["source_ids"],
             attention_mask=batch["source_mask"],
             labels=batch["target_ids"],
         )
-        # print("##############################")
-        # print(output.keys())
-        # print("##############################")
+
         loss = output["loss"]
         loss.backward()
         optimizer.step()
@@ -233,9 +217,7 @@ def train(
     if rank == 0:
         inner_pbar.close()
 
-        print(
-            f"Train Epoch: \t{epoch}, Loss: \t{train_accuracy:.4f}"
-        )  # .format(epoch, train_accuracy))
+        print(f"Train Epoch: \t{epoch}, Loss: \t{train_accuracy:.4f}")
     return train_accuracy
 
 
@@ -248,7 +230,7 @@ def validation(model, local_rank, rank, world_size, test_loader):
     ddp_loss = torch.zeros(3).to(local_rank)
     if rank == 0:
         inner_pbar = tqdm.tqdm(
-            range(len(test_loader)), colour="green", desc="r0 Validation Epoch"
+            range(len(test_loader)), colour="green", desc="Validation Epoch"
         )
     with torch.no_grad():
         for batch in test_loader:
@@ -264,11 +246,6 @@ def validation(model, local_rank, rank, world_size, test_loader):
 
             if rank == 0:
                 inner_pbar.update(1)
-            # pred = output.logits.argmax(
-            #    dim=1, keepdim=True
-            # )  # get the index of the max log-probability
-            # ddp_loss[1] += pred.eq(batch["target_ids"].view_as(pred)).sum().item()
-            # ddp_loss[2] += len(batch)
 
     dist.all_reduce(ddp_loss, op=dist.ReduceOp.SUM)
     val_loss = ddp_loss[0] / ddp_loss[1]
@@ -284,7 +261,8 @@ def validation(model, local_rank, rank, world_size, test_loader):
 
 
 def fsdp_main(args):
-    """main process within each process"""
+    """main process,  within each process"""
+
     torch.cuda.manual_seed(22)
     torch.manual_seed(22)
 
@@ -315,7 +293,7 @@ def fsdp_main(args):
         print(f"--> training for model {model_name}")
 
     printable_model_name = str.replace(model_name, "/", "=")
-    file_save_name = "800M-whole-model-"  # printable_model_name + "-"
+    file_save_name = "ModelCheckpoint-"  # printable_model_name + "-"
 
     # t5-base
     # google/t5-v1_1-small
@@ -338,12 +316,6 @@ def fsdp_main(args):
         print(f"--> Training for {model_name}")
         total_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
         print(f"\n--> {model_name} has {total_params/1e6} Million params\n")
-
-        # print(f"{dataset_name} contains: {dataset.keys()}")
-        # print("Size of {dataset_name} train dataset: ", dataset["train"].shape)
-        # print(
-        #    "Size of {dataset_name} Validation dataset: ", dataset["validation"].shape
-        # )
 
     # ____________ create batch dataset
     train_name = None
@@ -384,13 +356,6 @@ def fsdp_main(args):
     torch.cuda.set_device(local_rank)
     clear_gpu_cache(local_rank)
 
-    # init_start_event = torch.cuda.Event(enable_timing=True)
-    # init_end_event = torch.cuda.Event(enable_timing=True)
-
-    # init_start_event.record()
-
-    # model = model.to(rank)
-    # model = DDP(model)
     if cfg.activation_checkpointing:
         model.gradient_checkpointing_enable()
         print(f"Activation checkpointing enabled\n")
@@ -401,9 +366,6 @@ def fsdp_main(args):
     )  # use config, but default to normal if not available
     if rank == 0:
         print(f"Sharding strategy = {model_sharding_strategy}")
-
-    # move model to gpu
-    # model.to(local_rank)
 
     model = FSDP(
         model,
@@ -442,7 +404,8 @@ def fsdp_main(args):
                 reserve_p=cfg.percent_F,
                 mode="taskfree",
             )
-            print(f"--> child free tuning with {cfg.percent_F} percentage ")
+            if rank == 0:
+                print(f"--> child free tuning with {cfg.percent_F} percentage ")
     elif cfg.use_mirror_optimizer:
         optimizer = mirror(model.parameters(), lr=cfg.lr)
         if rank == 0:
@@ -450,7 +413,8 @@ def fsdp_main(args):
 
     else:
         optimizer = optim.AdamW(model.parameters(), lr=lr)
-        print(f"--> AdamW whole model tuning with ")
+        if rank == 0:
+            print(f"--> AdamW whole model tuning with ")
 
     scheduler = StepLR(optimizer, step_size=1, gamma=gamma)
     epochs = cfg.num_epochs
@@ -466,8 +430,8 @@ def fsdp_main(args):
         dur = []
         train_acc_tracking = []
         val_acc_tracking = []
-        dq = deque(maxlen=cfg.checkpoint_max_save_count+1)
-        
+        dq = deque(maxlen=cfg.checkpoint_max_save_count + 1)
+
         training_start_time = time.time()
 
     torch_profiler = None
@@ -543,8 +507,6 @@ def fsdp_main(args):
                 cpu_state = model.state_dict()
             # states = model.state_dict()
             print(f"saving process: rank {rank}  done w state_dict")
-            # dist.barrier()
-            # print(f"rank {rank}  done w 2nd barrier")
 
             if rank == 0:
                 print(f"--> saving model ...")
@@ -558,6 +520,7 @@ def fsdp_main(args):
                 print(f"--> saved {save_name} to disk")
 
                 dq.append(save_name)
+                print(f"--> file dq contents = {dq}")
                 # only keep a rolling number of model files to avoid excessive disk space use
                 model_checkpoints.prune_checkpoints(rank, dq, cfg)
 

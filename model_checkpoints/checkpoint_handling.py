@@ -11,3 +11,4 @@ def prune_checkpoints(rank, dq, cfg):
         file_to_remove = Path(dq.popleft())
         file_to_remove.unlink()
         print(f"--> removed checkpoint {file_to_remove}")
+    print(f" model checkpoint pruning complete")

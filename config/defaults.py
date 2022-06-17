@@ -7,8 +7,11 @@ class train_config:
     # general
     host_port: str = "12368"
 
+    # seed
+    seed: int = 2022
+
     # model
-    model_name = "google/t5-v1_1-xl"  # "google/t5-v1_1-small"
+    model_name = "google/t5-v1_1-small"  # "google/t5-v1_1-small"
     tokenizer = "t5-large"
     # available models
     ## t5-base
@@ -19,8 +22,11 @@ class train_config:
     # google/t5-v1_1-xxl #11b
 
     # save models
-    save_model: bool = False
-    save_folder = "model_checkpoints"
+    save_model: bool = True
+    save_folder = "training_checkpoints"
+    checkpoint_max_save_count: int = (
+        3  # number of 'best' checkpoints to save based on val loss
+    )
 
     # sharding policy
     sharding_strategy: ShardingStrategy = ShardingStrategy.FULL_SHARD
@@ -31,7 +37,7 @@ class train_config:
 
     # policies
     fsdp_unit_size = 1000000
-    use_mixed_precision: bool = False
+    use_mixed_precision: bool = True
 
     activation_checkpointing: bool = False
 
@@ -40,12 +46,12 @@ class train_config:
     dataset_test = "datasets_grammar/grammar_validation.csv"
 
     # training
-    batch_size: int = 2
-    num_epochs: int = 1
+    batch_size: int = 32
+    num_epochs: int = 5
 
     # validation
-    run_validation: bool = False
-    val_batch_size = 3
+    run_validation: bool = True
+    val_batch_size = 16
     block_for_validation: bool = False
 
     # logging
