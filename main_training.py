@@ -41,6 +41,12 @@ from torch.distributed.fsdp.wrap import (
     wrap,
 )
 
+# activation checkpointing
+from torch.distributed.algorithms._checkpoint.checkpoint_wrapper import (
+    checkpoint_wrapper,
+    CheckpointImpl,
+)
+
 from policies import mixed_precision
 
 from datasets import load_dataset, load_metric
