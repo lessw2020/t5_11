@@ -356,9 +356,12 @@ def fsdp_main(args):
     torch.cuda.set_device(local_rank)
     clear_gpu_cache(local_rank)
 
-    if cfg.activation_checkpointing:
+    if cfg.hf_activation_checkpointing and not cfg.fsdp_activation_checkpointing:
         model.gradient_checkpointing_enable()
-        print(f"Activation checkpointing enabled\n")
+        print(f"HF Activation checkpointing enabled\n")
+
+    if cfg.fsdp_activation_checkpointing:
+        print(f"--> fsdp activation checkpointing enabled...but not impl yet!")
 
     # --- sharding policy
     model_sharding_strategy = (
@@ -573,4 +576,3 @@ if __name__ == "__main__":
     fsdp_main(args)
 
     # cache workaround
-    
