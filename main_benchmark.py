@@ -202,21 +202,11 @@ def train(
         sampler.set_epoch(epoch)
     if rank == 0:
         inner_pbar = tqdm.tqdm(
-            range(len(train_loader)), colour="blue", desc="r0 Training Epoch"
+            range(len(train_loader)), colour="blue", desc="Training Epoch"
         )
     for batch in train_loader:
         for key in batch.keys():
             batch[key] = batch[key].to(local_rank)
-
-        print("************************")
-        print(
-            "train_loader",
-            type(batch),
-            batch["source_ids"].size(),
-            batch["source_mask"].size(),
-            batch["target_ids"].size(),
-        )
-        print("************************")
 
         optimizer.zero_grad()
         output = model(
@@ -224,9 +214,7 @@ def train(
             attention_mask=batch["source_mask"],
             labels=batch["target_ids"],
         )
-        # print("##############################")
-        # print(output.keys())
-        # print("##############################")
+
         loss = output["loss"]
         if scaler:
             scaler.scale(loss).backward()
@@ -264,7 +252,7 @@ def validation(cfg, model, local_rank, rank, world_size, test_loader, scaler):
     ddp_loss = torch.zeros(3).to(local_rank)
     if rank == 0:
         inner_pbar = tqdm.tqdm(
-            range(len(test_loader)), colour="green", desc="r0 Validation Epoch"
+            range(len(test_loader)), colour="green", desc="Validation Epoch"
         )
     with torch.no_grad():
         for batch in test_loader:
@@ -280,11 +268,6 @@ def validation(cfg, model, local_rank, rank, world_size, test_loader, scaler):
 
             if rank == 0:
                 inner_pbar.update(1)
-            # pred = output.logits.argmax(
-            #    dim=1, keepdim=True
-            # )  # get the index of the max log-probability
-            # ddp_loss[1] += pred.eq(batch["target_ids"].view_as(pred)).sum().item()
-            # ddp_loss[2] += len(batch)
 
     dist.all_reduce(ddp_loss, op=dist.ReduceOp.SUM)
 
