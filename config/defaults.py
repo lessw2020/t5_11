@@ -11,7 +11,7 @@ class train_config:
     seed: int = 2022
 
     # model
-    model_name = "google/t5-v1_1-small"  # "google/t5-v1_1-small"
+    model_name = "google/t5-v1_1-xxl"  # "google/t5-v1_1-small"
     tokenizer = "t5-large"
     # available models
     ## t5-base
@@ -25,7 +25,7 @@ class train_config:
     save_model: bool = True
     save_folder = "training_checkpoints"
     checkpoint_max_save_count: int = (
-        3  # number of 'best' checkpoints to save based on val loss
+        2  # number of 'best' checkpoints to save based on val loss
     )
 
     # sharding policy
@@ -44,16 +44,16 @@ class train_config:
     fsdp_activation_checkpointing: bool = False
 
     # datasets
-    dataset_train = "datasets_grammar/grammar_train.csv"
+    dataset_train = "datasets_grammar/gtrain_150K.csv"
     dataset_test = "datasets_grammar/grammar_validation.csv"
 
     # training
-    batch_size: int = 32
-    num_epochs: int = 1
+    batch_size: int = 5
+    num_epochs: int = 6
 
     # validation
     run_validation: bool = True
-    val_batch_size = 16
+    val_batch_size = 4
     block_for_validation: bool = False
 
     # logging
@@ -63,7 +63,7 @@ class train_config:
     distributed_debug: bool = True
 
     # Fine Tuning
-    use_child_tuning: bool = False
+    use_child_tuning: bool = True
     use_mirror_optimizer = False
     lr: float = 4e-8
 

@@ -366,11 +366,6 @@ def fsdp_main(args):
         if rank == 0:
             print(f"HF Activation checkpointing enabled\n")
 
-    if cfg.fsdp_activation_checkpointing:
-        policies.apply_checkpointing(model)
-        if rank == 0:
-            print(f"--> fsdp activation checkpointing enabled...")
-
     # --- sharding policy
     model_sharding_strategy = (
         cfg.sharding_strategy or ShardingStrategy.FULL_SHARD
@@ -385,6 +380,17 @@ def fsdp_main(args):
         sharding_strategy=model_sharding_strategy,
         device_id=torch.cuda.current_device(),  # streaming init
     )
+
+    if cfg.fsdp_activation_checkpointing:
+        policies.apply_checkpointing(model)
+        if rank == 0:
+            print(f"--> fsdp activation checkpointing enabled...")
+
+    if cfg.fsdp_activation_checkpointing and cfg.hf_activation_checkpointing:
+        print(
+            f"*** Bad config - both hf and fsdp checkpointing enabled.  Must be mutually exclusive...aborting"
+        )
+        return
 
     if rank == 0 and cfg.print_sharding_plan:
         print(f"model ")
