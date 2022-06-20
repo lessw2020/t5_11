@@ -261,12 +261,13 @@ def validation(model, local_rank, rank, world_size, test_loader):
 
 
 def fsdp_main(args):
-    """main process,  within each process"""
-
-    torch.cuda.manual_seed(22)
-    torch.manual_seed(22)
+    """main process,  within each rank process"""
 
     cfg = config.train_config()  # loads from defaults
+
+    torch.cuda.manual_seed(cfg.seed)
+    torch.manual_seed(cfg.seed)
+
 
     # torchrun specific
     local_rank = int(os.environ["LOCAL_RANK"])
@@ -381,8 +382,10 @@ def fsdp_main(args):
         device_id=torch.cuda.current_device(),  # streaming init
     )
 
+    # fsdp must do the checkpointing after sharding...
+
     if cfg.fsdp_activation_checkpointing:
-        policies.apply_checkpointing(model)
+        policies.apply_fsdp_checkpointing(model)
         if rank == 0:
             print(f"--> fsdp activation checkpointing enabled...")
 

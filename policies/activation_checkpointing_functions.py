@@ -17,10 +17,10 @@ non_reentrant_wrapper = partial(
     checkpoint_impl=CheckpointImpl.NO_REENTRANT,
 )
 
-check_fn = lambda _, submodule: isinstance(submodule, T5Block)
+check_fn = lambda submodule: isinstance(submodule, T5Block)
 
 
-def apply_checkpointing(model):
+def apply_fsdp_checkpointing(model):
     """apply activation checkpointing to model
     returns None as model is updated directly
     """

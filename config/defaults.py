@@ -11,7 +11,7 @@ class train_config:
     seed: int = 2022
 
     # model
-    model_name = "google/t5-v1_1-xxl"  # "google/t5-v1_1-small"
+    model_name = "google/t5-v1_1-base"  # "google/t5-v1_1-small"
     tokenizer = "t5-large"
     # available models
     ## t5-base
@@ -40,16 +40,16 @@ class train_config:
     use_mixed_precision: bool = True
 
     # activation checkpointing
-    hf_activation_checkpointing: bool = True
-    fsdp_activation_checkpointing: bool = False
+    hf_activation_checkpointing: bool = False
+    fsdp_activation_checkpointing: bool = True
 
     # datasets
-    dataset_train = "datasets_grammar/gtrain_150K.csv"
+    dataset_train = "datasets_grammar/grammar_train.csv"
     dataset_test = "datasets_grammar/grammar_validation.csv"
 
     # training
     batch_size: int = 5
-    num_epochs: int = 6
+    num_epochs: int = 1
 
     # validation
     run_validation: bool = True
