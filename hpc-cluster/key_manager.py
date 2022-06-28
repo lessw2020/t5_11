@@ -66,7 +66,6 @@ def get_secret(secret_name, region_name):
 
 
 if __name__ == '__main__':
-    # Training settings
     parser = argparse.ArgumentParser(description='managing secret/access keys')
     parser.add_argument('--config_path', type=str, default="cluster.yaml",help='path to the config file')
     parser.add_argument('--region', type=str, default="us-west-2",help='AWS region')
