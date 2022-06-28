@@ -10,10 +10,10 @@ import os
 import argparse
 import ast
 
-def get_secret():
+def get_secret(secret_name, region_name):
 
-    secret_name = "cluster-test"
-    region_name = "us-west-2"
+    secret_name = secret_name
+    region_name = region_name
 
     # Create a Secrets Manager client
     session = boto3.session.Session()
@@ -67,14 +67,16 @@ def get_secret():
 
 if __name__ == '__main__':
     # Training settings
-    parser = argparse.ArgumentParser(description='PyTorch T5 FSDP Example')
+    parser = argparse.ArgumentParser(description='managing secret/access keys')
     parser.add_argument('--config_path', type=str, default="cluster.yaml",help='path to the config file')
+    parser.add_argument('--region', type=str, default="us-west-2",help='AWS region')
+    parser.add_argument('--secret_name', type=str,help='name of the AWS secret')
 
     args = parser.parse_args()
 
     with open(args.config_path, 'r') as config_file:
         configs = yaml.safe_load(config_file)
-        response = get_secret()
+        response = get_secret(args.secret_name, args.region)
         keys = ast.literal_eval(response['SecretString'])
  
         for indx, item in enumerate(configs["scrape_configs"]):
