@@ -7,7 +7,7 @@ class benchmark_config:
     host_port: str = "12368"
 
     # model
-    model_name = "t5-small"  # "google/t5-v1_1-small"
+    model_name = "t5-base"  # "google/t5-v1_1-small"
     tokenizer = "t5-large"
     # available models
     ## t5-base
@@ -21,14 +21,14 @@ class benchmark_config:
     print_sharding_plan: bool = False
 
     # dataloaders
-    num_workers_dataloader: int = 0
+    num_workers_dataloader: int = 2
 
     # policies
     fsdp_unit_size = 1000000
-    use_mixed_precision: bool = False
+    use_mixed_precision: bool = True
     use_fp16: bool = False
 
-    hf_activation_checkpointing: bool = False
+    hf_activation_checkpointing: bool = True
     fsdp_activation_checkpointing: bool = False
 
     # datasets
@@ -37,7 +37,7 @@ class benchmark_config:
 
     # training
     batch_size: int = 4
-    num_epochs: int = 3
+    num_epochs: int = 2
 
     # validation
     run_validation: bool = True

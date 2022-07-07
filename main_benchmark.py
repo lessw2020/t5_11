@@ -2,6 +2,8 @@
 
 import os
 import argparse
+
+from platformdirs import user_config_dir
 from datasets_grammar.grammar_dataset import grammar
 
 import torch
@@ -333,8 +335,10 @@ def fsdp_main(args):
 
     # grammar correction
     tokenizer = AutoTokenizer.from_pretrained(cfg.tokenizer, model_max_length=512)
-
-    model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
+    if cfg.hf_activation_checkpointing:
+        model = AutoModelForSeq2SeqLM.from_pretrained(model_name, use_cache=False)
+    else:
+        model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
 
     # summarization
     # model = T5ForConditionalGeneration.from_pretrained(model_name)
@@ -411,8 +415,15 @@ def fsdp_main(args):
     # move model to gpu
     # model.to(local_rank)
 
+    # sanity check
+    if cfg.hf_activation_checkpointing and cfg.fsdp_activation_checkpointing:
+        print(
+            f"alert! --> fsdp and hf chekckpointing both active...this is not compatible. Aborting."
+        )
+        return
+
     if cfg.fsdp_activation_checkpointing:
-        policies.apply_checkpointing(model)
+        policies.apply_fsdp_checkpointing(model)
 
     if rank == 0 and cfg.print_sharding_plan:
         print(f"model ")
