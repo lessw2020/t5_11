@@ -116,7 +116,7 @@ def parse_args():
 
 
 # ----------------   Main functions --------------------
-def get_policies(cfg):
+def get_policies(cfg, rank):
 
     """establish current policies for mixed precision and fsdp wrapping"""
 
@@ -129,10 +129,12 @@ def get_policies(cfg):
 
         if bf16_ready and not cfg.use_fp16:
             mixed_precision_policy = policies.bfSixteen
-            print(f"bFloat16 enabled for mixed precision - using bfSixteen policy")
+            if rank == 0:
+                print(f"bFloat16 enabled for mixed precision - using bfSixteen policy")
         elif cfg.use_fp16:
             mixed_precision_policy = policies.fpSixteen
-            print(f"FP16 enabled. ")
+            if rank == 0:
+                print(f"FP16 enabled. ")
         else:
             # mixed_precision_policy = policies.fpSixteen
             print(
@@ -158,13 +160,15 @@ def setup(rank, world_size, cfg):
 
 def setup_environ_flags(cfg, rank):
 
-    print("\n--> Setting environment policies....\n")
+    if rank == 0:
+        print("\n--> Setting environment policies....\n")
     os.environ["TORCH_SHOW_CPP_STACKTRACES"] = str(1)
     if cfg.nccl_debug_handler:
         os.environ["NCCL_ASYNC_ERROR_HANDLING"] = str(1)
     if cfg.distributed_debug:
         os.environ["TORCH_DISTRIBUTED_DEBUG"] = "DETAIL"
-        print(f"--> running with torch dist debug set to detail, rank {rank}")
+        if rank == 0:
+            print(f"--> running with torch dist debug set to detail, rank {rank}")
     os.environ["NCCL_DEBUG"] = "WARN"
     os.environ["PYTHONFAULTHANDLER"] = str(1)
 
@@ -312,7 +316,8 @@ def fsdp_main(args):
 
     setup_tasks(rank, world_size, cfg)
 
-    print(f"settings for NCCL = {os.getenv('NCCL_DEBUG')}")
+    if rank == 0:
+        print(f"settings for NCCL = {os.getenv('NCCL_DEBUG')}")
 
     fsdp_unit_params = cfg.fsdp_unit_size
     batch_size = cfg.batch_size
@@ -323,7 +328,7 @@ def fsdp_main(args):
 
     scaler = None  # only used for fp16
 
-    mp_policy, wrapping_policy = get_policies(cfg)
+    mp_policy, wrapping_policy = get_policies(cfg, rank)
 
     if cfg.use_fp16:
         from torch.distributed.fsdp.sharded_grad_scaler import ShardedGradScaler
@@ -390,7 +395,8 @@ def fsdp_main(args):
     )
     sampler2 = DistributedSampler(val_dataset, rank=rank, num_replicas=world_size)
 
-    print(f"batch size = {batch_size}")
+    if rank == 0:
+        print(f"batch size = {batch_size}")
 
     train_kwargs = {"batch_size": batch_size, "sampler": sampler1}
     test_kwargs = {"batch_size": val_batch_size, "sampler": sampler2}
@@ -478,7 +484,8 @@ def fsdp_main(args):
         )
     else:
         optimizer = optim.AdamW(model.parameters(), lr=lr)
-        print(f"--> optimizer is AdamW")
+        if rank == 0:
+            print(f"--> optimizer is AdamW")
 
     scheduler = StepLR(optimizer, step_size=1, gamma=gamma)
     epochs = cfg.num_epochs
@@ -611,8 +618,14 @@ def fsdp_main(args):
     torch.distributed.all_gather_object(
         delays, (end_training_time - start_training_time) / epochs
     )
+    for i, item in enumerate(delays):
+        delays[i] = round(item, 4)
+
     print("Flops cnt and delays", FLOP, delays)
-    tflops_gpu = FLOP / 10**12 * np.reciprocal(np.array(delays))
+    # tflops_gpu = FLOP / 10**12 * np.reciprocal(np.array(delays))
+    if rank == 0:
+        gflops_gpu = FLOP / 10**9 * np.reciprocal(np.array(delays))
+        print(f"gflops per gpu={gflops_gpu}")
 
     # init_end_event.record()
     if rank == 0:
@@ -643,7 +656,7 @@ def fsdp_main(args):
 
             # print("LEN Tflops",len(tflops_gpu), sum(tflops_gpu), tflops_gpu)
             print(
-                f"tflops/gpu = {sum(tflops_gpu) / len(tflops_gpu):.2f} ({stdev(tflops_gpu):.2f})\n"
+                f"gflops/gpu = {sum(gflops_gpu) / len(gflops_gpu):.2f} ({stdev(gflops_gpu):.2f})\n"
             )
         # print(
         # f"Cuda event elapsed time: {init_start_event.elapsed_time(init_end_event) / 1000}sec"

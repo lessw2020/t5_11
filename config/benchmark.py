@@ -38,7 +38,7 @@ class benchmark_config:
 
     # training
     batch_size: int = 4
-    num_epochs: int = 2
+    num_epochs: int = 1
 
     # validation
     run_validation: bool = True
