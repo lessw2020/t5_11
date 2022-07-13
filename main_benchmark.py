@@ -283,6 +283,13 @@ def validation(cfg, model, local_rank, rank, world_size, test_loader, scaler):
     return val_loss
 
 
+def sync_all_device():
+        # setup() has already configured CUDA_VISIBLE_DEVICES such that each
+        # process exclusively works on its own set of devices. So it's safe to
+        # do device sync here
+        for d in range(torch.cuda.device_count()):
+            torch.cuda.synchronize(d)
+
 # ---- fsdp main ------------------------------------------------------------
 
 
@@ -533,8 +540,9 @@ def fsdp_main(args):
             print(f"--> epoch {epoch} completed...entering save and stats zone")
 
             dur.append(time.time() - t0)
+            total_latency = time.time() - t0
             train_acc_tracking.append(train_accuracy.item())
-
+            print(f"TFLOP/s/GPU: {FLOP/10**12/total_latency}")
             if cfg.run_validation:
                 val_acc_tracking.append(curr_val_loss.item())
 
@@ -582,10 +590,11 @@ def fsdp_main(args):
 
             best_val_loss = curr_val_loss
             print(f"-->>>> New Val Loss Record: {best_val_loss}")
-
+    sync_all_device()
     end_training_time = time.time()
     delays = [None for _ in range(world_size)]
     torch.distributed.all_gather_object(delays, (end_training_time-start_training_time) / epochs)
+    print("FLOp and delayes", FLOP, delays)
     tflops_gpu = FLOP / 10**12 * np.reciprocal(np.array(delays))
     # init_end_event.record()
     if rank == 0:
@@ -612,7 +621,10 @@ def fsdp_main(args):
             print(
                 f"CUDA Memory Summary After Last training:\n {torch.cuda.memory_summary()}"
             )
-        print(f"tflops/gpu = {sum(tflops_gpu) / len(tflops_gpu):.2f} ({stdev(tflops_gpu):.2f})\n")
+        if rank ==0:
+
+            # print("LEN Tflops",len(tflops_gpu), sum(tflops_gpu), tflops_gpu)
+            print(f"tflops/gpu = {sum(tflops_gpu) / len(tflops_gpu):.2f} ({stdev(tflops_gpu):.2f})\n")
         # print(
         # f"Cuda event elapsed time: {init_start_event.elapsed_time(init_end_event) / 1000}sec"
         # )
