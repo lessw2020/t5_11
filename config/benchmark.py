@@ -9,6 +9,7 @@ class benchmark_config:
     # model
     model_name = "t5-base"  # "google/t5-v1_1-small"
     tokenizer = "t5-large"
+    model_max_length = 512
     # available models
     ## t5-base
     # google/t5-v1_1-small
