@@ -10,7 +10,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-
+import numpy as np
 # from torchvision import datasets, transforms
 
 
@@ -70,7 +70,7 @@ import tqdm
 
 # config
 import config
-
+from utils.calculations_utils import calc_flop
 # some globals
 g_port = "12369"
 g_addr = "localhost"
@@ -216,7 +216,7 @@ def train(
             attention_mask=batch["source_mask"],
             labels=batch["target_ids"],
         )
-
+        
         loss = output["loss"]
         if scaler:
             scaler.scale(loss).backward()
@@ -334,7 +334,7 @@ def fsdp_main(args):
     # google/t5-v1_1-xxl #11b
 
     # grammar correction
-    tokenizer = AutoTokenizer.from_pretrained(cfg.tokenizer, model_max_length=512)
+    tokenizer = AutoTokenizer.from_pretrained(cfg.tokenizer, model_max_length=cfg.model_max_length)
     if cfg.hf_activation_checkpointing:
         model = AutoModelForSeq2SeqLM.from_pretrained(model_name, use_cache=False)
     else:
@@ -406,6 +406,11 @@ def fsdp_main(args):
         model.gradient_checkpointing_enable()
         print(f"HF Activation checkpointing enabled\n")
 
+    model_config = model.config
+    embedding_size = (model.state_dict()['shared.weight'].shape)[1]
+    FLOP = calc_flop(cfg, model_config, cfg.model_max_length, embedding_size)
+
+    print("embedig size **********", model.state_dict()['shared.weight'].shape, embedding_size)
     model = FSDP(
         model,
         auto_wrap_policy=wrapping_policy,
@@ -492,7 +497,7 @@ def fsdp_main(args):
         fn = cfg.model_name + "memory_tracking.txt"
         mem_alloc_tracker = []
         mem_reserved_tracker = []
-
+    start_training_time = time.time()
     for epoch in range(1, epochs + 1):
         if rank == 0:
             print(f"\n--> Starting Epoch {epoch}")
@@ -577,6 +582,10 @@ def fsdp_main(args):
             best_val_loss = curr_val_loss
             print(f"-->>>> New Val Loss Record: {best_val_loss}")
 
+    end_training_time = time.time()
+    delays = [None for _ in range(world_size)]
+    torch.distributed.all_gather_object(delays, (end_training_time-start_training_time) / epochs)
+    tflops_gpu = FLOP / 10**12 * np.reciprocal(np.array(delays))
     # init_end_event.record()
     if rank == 0:
         # inner_pbar.close()
@@ -602,6 +611,7 @@ def fsdp_main(args):
             print(
                 f"CUDA Memory Summary After Last training:\n {torch.cuda.memory_summary()}"
             )
+        print(f"tflops/gpu = {sum(tflops_gpu) / len(tflops_gpu):.2f} ({stdev(tflops_gpu):.2f})\n")
         # print(
         # f"Cuda event elapsed time: {init_start_event.elapsed_time(init_end_event) / 1000}sec"
         # )
