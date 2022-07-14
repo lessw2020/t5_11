@@ -2,12 +2,16 @@
 
 import os
 import argparse
+
+from platformdirs import user_config_dir
 from datasets_grammar.grammar_dataset import grammar
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
+import numpy as np
+from statistics import stdev
 
 # from torchvision import datasets, transforms
 
@@ -39,7 +43,7 @@ from torch.distributed.fsdp import (
 
 
 from torch.distributed.fsdp.wrap import (
-    default_auto_wrap_policy,
+    transformer_auto_wrap_policy,
     enable_wrap,
     wrap,
 )
@@ -53,9 +57,11 @@ from torch.utils.data import DataLoader
 
 # from nlp import load_metric
 # from nlp import load_dataset
+from ChildTuningOptimizer import ChildTuningAdamW
 
-from sklearn.model_selection import train_test_split
+# from sklearn.model_selection import train_test_split
 import time
+from datetime import datetime
 
 # local imports
 import verify
@@ -66,6 +72,8 @@ import tqdm
 
 # config
 import config
+from utils.calculations_utils import calc_flop
+
 
 # some globals
 g_port = "12369"
@@ -100,7 +108,7 @@ def parse_args():
 
 
 # ----------------   Main functions --------------------
-def get_policies(cfg, fsdp_unit_params=1000000):
+def get_policies(cfg, rank):
 
     """establish current policies for mixed precision and fsdp wrapping"""
 
@@ -111,20 +119,29 @@ def get_policies(cfg, fsdp_unit_params=1000000):
     if cfg.use_mixed_precision:
         bf16_ready = verify.bf16_ready
 
-        if bf16_ready:
+        if bf16_ready and not cfg.use_fp16:
             mixed_precision_policy = policies.bfSixteen
-            print(f"bFloat16 enabled for mixed precision - using bfSixteen policy")
+            if rank == 0:
+                
+                print(f"bFloat16 enabled for mixed precision - using bfSixteen policy")
+        elif cfg.use_fp16:
+            mixed_precision_policy = policies.fpSixteen
+            if rank == 0:
+                print(f"FP16 enabled. ")
         else:
             # mixed_precision_policy = policies.fpSixteen
-            print(f"bFloat16 support not present. Not using for mixed precision")
+            print(
+                f"bFloat16 support not present. Will use FP32, and not mixed precision"
+            )
 
     # wrapping policy -------
     # print(f"**overriding mp to fp16 - remove")
     # mixed_precision_policy = policies.fpSixteen
 
-    wrapping_policy = policies.get_t5_wrapper(fsdp_unit_params)
+    wrapping_policy = policies.get_t5_wrapper()
 
     return mixed_precision_policy, wrapping_policy
+
 
 
 def setup(rank, world_size, cfg):
@@ -273,13 +290,18 @@ def validation(model, rank, world_size, test_loader):
         print(f"Validation Loss: {val_loss:.4f}")
     return val_loss
 
-
+def sync_all_device():
+    # setup() has already configured CUDA_VISIBLE_DEVICES such that each
+    # process exclusively works on its own set of devices. So it's safe to
+    # do device sync here
+    for d in range(torch.cuda.device_count()):
+        torch.cuda.synchronize(d)
 # ---- fsdp main ------------------------------------------------------------
 
 
 def fsdp_main(rank, world_size, args):
     """main process within each process"""
-    cfg = config.train_config()  # loads from defaults
+    cfg = config.benchmark_config()# loads from defaults
 
     if rank == 0:
         print(f"--> running with these defaults {cfg}")
@@ -294,6 +316,11 @@ def fsdp_main(rank, world_size, args):
     val_batch_size = cfg.val_batch_size
 
     mp_policy, wrapping_policy = get_policies(cfg, fsdp_unit_params)
+
+    if cfg.use_fp16:
+        from torch.distributed.fsdp.sharded_grad_scaler import ShardedGradScaler
+
+        scaler = ShardedGradScaler()
 
     model_name = cfg.model_name  # "google/t5-v1_1-small"  #   #
     save_name = model_name + "-"
@@ -368,17 +395,40 @@ def fsdp_main(rank, world_size, args):
 
     # model = model.to(rank)
     # model = DDP(model)
-    if cfg.activation_checkpointing:
+    if cfg.fsdp_activation_checkpointing:
         model.gradient_checkpointing_enable()
         print(f"Activation checkpointing enabled\n")
+
+    model_config = model.config
+    embedding_size = (model.state_dict()["shared.weight"].shape)[1]
+    FLOP = calc_flop(cfg, model_config, cfg.model_max_length, embedding_size)
+
+    print(
+        "embedding size **********",
+        model.state_dict()["shared.weight"].shape,
+        embedding_size,
+    )
 
     model = FSDP(
         model,
         auto_wrap_policy=wrapping_policy,
         mixed_precision=mp_policy,
+        device_id=torch.cuda.current_device(),
     )
     # move model to gpu
-    model.to(rank)
+    # model.to(local_rank)
+
+    # sanity check
+    if cfg.hf_activation_checkpointing and cfg.fsdp_activation_checkpointing:
+        print(
+            f"alert! --> fsdp and hf chekckpointing both active...this is not compatible. Aborting."
+        )
+        return
+
+    if cfg.fsdp_activation_checkpointing:
+        policies.apply_fsdp_checkpointing(model)
+
+    # model.to(rank)
 
     if rank == 0 and cfg.print_sharding_plan:
         print(f"model ")
@@ -399,8 +449,19 @@ def fsdp_main(rank, world_size, args):
             external_file.close()
 
     lr = 0.0008
-    gamma = 0.7
-    optimizer = optim.AdamW(model.parameters(), lr=lr)
+    gamma = 0.85
+    if cfg.use_task_free:
+        optimizer = ChildTuningAdamW(
+            model.parameters(),
+            lr=lr,
+            weight_decay=0.01,
+            reserve_p=cfg.percent_F,
+            mode="taskfree",
+        )
+    else:
+        optimizer = optim.AdamW(model.parameters(), lr=lr)
+        if rank == 0:
+            print(f"--> optimizer is AdamW")
 
     scheduler = StepLR(optimizer, step_size=1, gamma=gamma)
     epochs = cfg.num_epochs
@@ -409,6 +470,8 @@ def fsdp_main(rank, world_size, args):
 
     best_train_accuracy = float("-inf")
     test_accuracy = float("-inf")
+    curr_val_loss = float("inf")
+    best_val_loss = float("inf")
 
     # --- main training loop - todo, this needs to be modularized
     if rank == 0:
@@ -436,6 +499,7 @@ def fsdp_main(rank, world_size, args):
         fn = cfg.model_name + "memory_tracking.txt"
         mem_alloc_tracker = []
         mem_reserved_tracker = []
+    start_training_time = time.time()
 
     for epoch in range(1, epochs + 1):
         if rank == 0:
@@ -461,8 +525,13 @@ def fsdp_main(rank, world_size, args):
 
         if rank == 0:
 
-            dur.append(time.time() - t0)
+            print(f"--> epoch {epoch} completed...entering save and stats zone")
+
+            total_epoch_time = time.time() - t0
+            dur.append(total_epoch_time)
+
             train_acc_tracking.append(train_accuracy.item())
+            print(f"TFLOP/s/GPU: {FLOP/10**12/total_epoch_time}")
 
             if cfg.run_validation:
                 val_acc_tracking.append(test_accuracy.item())
@@ -471,26 +540,46 @@ def fsdp_main(rank, world_size, args):
                 mem_alloc_tracker.append(torch.cuda.memory_allocated())
                 mem_reserved_tracker.append(torch.cuda.memory_reserved())
 
-        if cfg.save_model:
-            save_policy = FullStateDictConfig(offload_to_cpu=True, rank0_only=True)
-            with FSDP.state_dict_type(
-                model, StateDictType.FULL_STATE_DICT, save_policy
-            ):
-                cpu_state = model.state_dict()
-            # states = model.state_dict()
-            print(f"saving process: rank {rank}  done w state_dict")
-            # dist.barrier()
-            # print(f"rank {rank}  done w 2nd barrier")
+        # if cfg.save_model:
+        #     save_policy = FullStateDictConfig(offload_to_cpu=True, rank0_only=True)
+        #     with FSDP.state_dict_type(
+        #         model, StateDictType.FULL_STATE_DICT, save_policy
+        #     ):
+        #         cpu_state = model.state_dict()
+        #     # states = model.state_dict()
+        #     print(f"saving process: rank {rank}  done w state_dict")
+        #     # dist.barrier()
+        #     # print(f"rank {rank}  done w 2nd barrier")
 
-            if rank == 0:
-                print(f"--> saving model ...")
-                currEpoch = "-" + str(epoch) + "-train.pt"
-                model_save_name = save_name + currEpoch
+        #     if rank == 0:
+        #         print(f"--> saving model ...")
+        #         currEpoch = "-" + str(epoch) + "-train.pt"
+        #         model_save_name = save_name + currEpoch
 
-                torch.save(cpu_state, model_save_name)
+        #         torch.save(cpu_state, model_save_name)
 
-                print(f"--> saved {model_save_name} to disk")
+        #         print(f"--> saved {model_save_name} to disk")
+         # announce new val loss record:
+        if rank == 0 and curr_val_loss < best_val_loss:
 
+            best_val_loss = curr_val_loss
+            print(f"-->>>> New Val Loss Record: {best_val_loss}")
+
+    sync_all_device()
+    end_training_time = time.time()
+
+    delays = [None for _ in range(world_size)]
+    torch.distributed.all_gather_object(
+        delays, (end_training_time - start_training_time) / epochs
+    )
+    for i, item in enumerate(delays):
+        delays[i] = round(item, 4)
+
+    print("Flops cnt and delays", FLOP, delays)
+    # tflops_gpu = FLOP / 10**12 * np.reciprocal(np.array(delays))
+    if rank == 0:
+        gflops_gpu = FLOP / 10**9 * np.reciprocal(np.array(delays))
+        print(f"gflops per gpu={gflops_gpu}")
     # init_end_event.record()
     if rank == 0:
         # inner_pbar.close()
