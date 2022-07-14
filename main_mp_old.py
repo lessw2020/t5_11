@@ -122,7 +122,7 @@ def get_policies(cfg, rank):
         if bf16_ready and not cfg.use_fp16:
             mixed_precision_policy = policies.bfSixteen
             if rank == 0:
-                
+
                 print(f"bFloat16 enabled for mixed precision - using bfSixteen policy")
         elif cfg.use_fp16:
             mixed_precision_policy = policies.fpSixteen
@@ -141,7 +141,6 @@ def get_policies(cfg, rank):
     wrapping_policy = policies.get_t5_wrapper()
 
     return mixed_precision_policy, wrapping_policy
-
 
 
 def setup(rank, world_size, cfg):
@@ -290,18 +289,21 @@ def validation(model, rank, world_size, test_loader):
         print(f"Validation Loss: {val_loss:.4f}")
     return val_loss
 
+
 def sync_all_device():
     # setup() has already configured CUDA_VISIBLE_DEVICES such that each
     # process exclusively works on its own set of devices. So it's safe to
     # do device sync here
     for d in range(torch.cuda.device_count()):
         torch.cuda.synchronize(d)
+
+
 # ---- fsdp main ------------------------------------------------------------
 
 
 def fsdp_main(rank, world_size, args):
     """main process within each process"""
-    cfg = config.benchmark_config()# loads from defaults
+    cfg = config.benchmark_config()  # loads from defaults
 
     if rank == 0:
         print(f"--> running with these defaults {cfg}")
@@ -395,9 +397,9 @@ def fsdp_main(rank, world_size, args):
 
     # model = model.to(rank)
     # model = DDP(model)
-    if cfg.fsdp_activation_checkpointing:
+    if cfg.hf_activation_checkpointing:
         model.gradient_checkpointing_enable()
-        print(f"Activation checkpointing enabled\n")
+        print(f"HF Activation checkpointing enabled\n")
 
     model_config = model.config
     embedding_size = (model.state_dict()["shared.weight"].shape)[1]
@@ -559,7 +561,7 @@ def fsdp_main(rank, world_size, args):
         #         torch.save(cpu_state, model_save_name)
 
         #         print(f"--> saved {model_save_name} to disk")
-         # announce new val loss record:
+        # announce new val loss record:
         if rank == 0 and curr_val_loss < best_val_loss:
 
             best_val_loss = curr_val_loss
