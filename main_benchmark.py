@@ -74,6 +74,8 @@ import tqdm
 import config
 from utils.calculations_utils import calc_flop
 
+import performance
+
 # some globals
 g_port = "12369"
 g_addr = "localhost"
@@ -303,7 +305,6 @@ def sync_all_device():
 def fsdp_main(args):
     """main process within each process"""
     cfg = config.benchmark_config()  # loads from defaults
-    print(f"--> Running with benchmark configs!")
 
     # torchrun specific
     local_rank = int(os.environ["LOCAL_RANK"])
@@ -311,6 +312,7 @@ def fsdp_main(args):
     world_size = int(os.environ["WORLD_SIZE"])
 
     if rank == 0:
+        print(f"--> Running with benchmark configs!")
         print(f"--> running with these defaults {cfg}")
         time_of_run = get_date_of_run()
 
@@ -353,6 +355,11 @@ def fsdp_main(args):
     tokenizer = AutoTokenizer.from_pretrained(
         cfg.tokenizer, model_max_length=cfg.model_max_length
     )
+
+    # setup gpu memory monitoring
+    if rank == 0:
+        memmax = performance.Memory_Maximizer()
+
     if cfg.hf_activation_checkpointing:
         model = AutoModelForSeq2SeqLM.from_pretrained(model_name, use_cache=False)
     else:
@@ -497,10 +504,13 @@ def fsdp_main(args):
     curr_val_loss = float("inf")
 
     # --- main training loop - todo, this needs to be modularized
+
     if rank == 0:
         dur = []
         train_acc_tracking = []
         val_acc_tracking = []
+        memmax.start()
+
         training_start_time = time.time()
 
     torch_profiler = None
@@ -542,6 +552,9 @@ def fsdp_main(args):
             profiler=torch_profiler,
             scaler=scaler,
         )
+        if rank == 0:
+            memmax.update()
+
         if cfg.block_for_validation:
             dist.barrier()
             if rank == 0:
@@ -638,6 +651,8 @@ def fsdp_main(args):
         print()
 
         # memory
+        memmax.stop()
+
         if cfg.track_memory:
             print(f"total memory reserved: {mem_reserved_tracker}")
             print(f"total memory allocated: {mem_alloc_tracker}")
