@@ -7,7 +7,7 @@ class benchmark_config:
     host_port: str = "12368"
 
     # model
-    model_name = "t5-small"  # google/t5-v1_1-xl"  # "google/t5-v1_1-small"
+    model_name = "google/t5-v1_1-xl"  # google/t5-v1_1-xl"  # "google/t5-v1_1-small"
     tokenizer = "t5-large"
     model_max_length = 512
     # available models
@@ -22,7 +22,7 @@ class benchmark_config:
     print_sharding_plan: bool = False
 
     # dataloaders
-    num_workers_dataloader: int = 0
+    num_workers_dataloader: int = 2
 
     # policies
     fsdp_unit_size = 1000000
@@ -37,7 +37,7 @@ class benchmark_config:
     dataset_test = "datasets_grammar/grammar_validation.csv"
 
     # training
-    batch_size: int = 1
+    batch_size: int = 8
     num_epochs: int = 1
 
     # validation
