@@ -25,6 +25,7 @@ class benchmark_config:
     num_workers_dataloader: int = 2
 
     # policies
+    pure_bfloat = True
     fsdp_unit_size = 1000000
     use_mixed_precision: bool = True
     use_fp16: bool = False

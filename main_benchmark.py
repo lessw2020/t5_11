@@ -444,10 +444,15 @@ def fsdp_main(args):
         model.state_dict()["shared.weight"].shape,
         embedding_size,
     )
+    if cfg.pure_bfloat:
+        model = model.to(torch.bfloat16)
+        mp_policy = None
+        if rank == 0:
+            print(f"--> Model converted to BF16.\nRunning in PURE BFloat mode")
 
     model = FSDP(
         model,
-        # auto_wrap_policy=num_wrapping,
+        auto_wrap_policy=wrapping_policy,
         mixed_precision=mp_policy,
         device_id=torch.cuda.current_device(),
     )
@@ -492,6 +497,12 @@ def fsdp_main(args):
             reserve_p=cfg.percent_F,
             mode="taskfree",
         )
+    elif cfg.pure_bfloat:
+        from bff_optimizer import BFF_Optimizer
+
+        optimizer = BFF_Optimizer(model.parameters(), lr=lr, weight_decay=0.01)
+        if rank == 0:
+            print("Optimizer set to BFF Optimizer")
     else:
         optimizer = optim.AdamW(model.parameters(), lr=lr, weight_decay=0.01)
         if rank == 0:
