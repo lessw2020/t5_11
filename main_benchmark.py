@@ -322,6 +322,9 @@ def fsdp_main(args):
         print(f"settings for NCCL = {os.getenv('NCCL_DEBUG')}")
 
     fsdp_unit_params = cfg.fsdp_unit_size
+
+    num_wrapping = policies.get_size_policy()  # (fsdp_unit_params)
+
     batch_size = cfg.batch_size
     if rank == 0:
         print(f"\n BatchSize = {batch_size}\n")
@@ -444,7 +447,7 @@ def fsdp_main(args):
 
     model = FSDP(
         model,
-        auto_wrap_policy=wrapping_policy,
+        # auto_wrap_policy=num_wrapping,
         mixed_precision=mp_policy,
         device_id=torch.cuda.current_device(),
     )
@@ -490,7 +493,7 @@ def fsdp_main(args):
             mode="taskfree",
         )
     else:
-        optimizer = optim.AdamW(model.parameters(), lr=lr)
+        optimizer = optim.AdamW(model.parameters(), lr=lr, weight_decay=0.01)
         if rank == 0:
             print(f"--> optimizer is AdamW")
 
@@ -634,10 +637,11 @@ def fsdp_main(args):
     for i, item in enumerate(delays):
         delays[i] = round(item, 4)
 
-    print("Flops cnt and delays", FLOP, delays)
-    # tflops_gpu = FLOP / 10**12 * np.reciprocal(np.array(delays))
     if rank == 0:
+        print("Flops cnt and delays", FLOP, delays)
+
         gflops_gpu = FLOP / 10**9 * np.reciprocal(np.array(delays))
+        tflops_gpu = FLOP / 10**12 * np.reciprocal(np.array(delays))
         print(f"gflops per gpu={gflops_gpu}")
 
     # init_end_event.record()
@@ -672,6 +676,7 @@ def fsdp_main(args):
             # print("LEN Tflops",len(tflops_gpu), sum(tflops_gpu), tflops_gpu)
             print(
                 f"gflops/gpu = {sum(gflops_gpu) / len(gflops_gpu):.2f} ({stdev(gflops_gpu):.2f})\n"
+                f"Tflops/gpu = {sum(tflops_gpu) / len(tflops_gpu):.2f} ({stdev(tflops_gpu):.2f})\n"
             )
         # print(
         # f"Cuda event elapsed time: {init_start_event.elapsed_time(init_end_event) / 1000}sec"

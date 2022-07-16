@@ -7,7 +7,7 @@ class benchmark_config:
     host_port: str = "12368"
 
     # model
-    model_name = "google/t5-v1_1-xl"  # google/t5-v1_1-xl"  # "google/t5-v1_1-small"
+    model_name = "t5-small"  # google/t5-v1_1-xl"  # "google/t5-v1_1-small"
     tokenizer = "t5-large"
     model_max_length = 512
     # available models
@@ -30,19 +30,19 @@ class benchmark_config:
     use_fp16: bool = False
 
     hf_activation_checkpointing: bool = False
-    fsdp_activation_checkpointing: bool = True
+    fsdp_activation_checkpointing: bool = False
 
     # datasets
-    dataset_train = "datasets_grammar/gtrain_1k.csv"  # grammar_13k.csv
+    dataset_train = "datasets_grammar/grammar_train.csv"  # grammar_13k.csv
     dataset_test = "datasets_grammar/grammar_validation.csv"
 
     # training
     batch_size: int = 8
-    num_epochs: int = 1
+    num_epochs: int = 5
 
     # validation
-    run_validation: bool = False
-    val_batch_size = 4
+    run_validation: bool = True
+    val_batch_size = 16
     block_for_validation: bool = False
 
     # logging

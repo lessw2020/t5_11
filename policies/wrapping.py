@@ -15,12 +15,20 @@ from torch.distributed.fsdp.fully_sharded_data_parallel import (
 )
 from torch.distributed.fsdp.wrap import (
     transformer_auto_wrap_policy,
+    size_based_auto_wrap_policy,
     enable_wrap,
     wrap,
 )
 
 import functools
 from typing import Type
+
+
+def get_size_policy(min_params=1e8):
+    num_wrap_policy = functools.partial(
+        size_based_auto_wrap_policy, min_num_params=min_params
+    )
+    return num_wrap_policy
 
 
 def get_t5_wrapper():
