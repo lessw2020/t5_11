@@ -1,7 +1,7 @@
 # BFF_Optimizer: a pure Bfloat16 optimizer - basic idea is we use Kahan summarization to offset the Bfloat16 precision reduction, allowing full training in BFloat16.
 
 # paper credit - "Revisiting Bfloat16 training" - https://arxiv.org/abs/2010.06192
-# original impl - https://github.com/arogozhnikov/adamw_bfloat16
+# original inspiration - https://github.com/arogozhnikov/adamw_bfloat16
 # Kahan summation - https://en.wikipedia.org/wiki/Kahan_summation_algorithm
 
 import torch
@@ -10,7 +10,14 @@ from torch.optim.optimizer import Optimizer
 
 class BFF_Optimizer(Optimizer):
     def __init__(
-        self, params, lr=1e-3, betas=(0.9, 0.999), eps=1e-8, weight_decay=1e-2
+        self,
+        params,
+        pure_mode=False,
+        optimizer_states16=True,
+        lr=1e-3,
+        betas=(0.9, 0.999),
+        eps=1e-8,
+        weight_decay=1e-2,
     ):
 
         """
@@ -25,7 +32,14 @@ class BFF_Optimizer(Optimizer):
                 weight_decay (float, optional): weight decay coefficient (default: 1e-2)
 
         """
-        defaults = dict(lr=lr, betas=betas, eps=eps, weight_decay=weight_decay)
+        defaults = dict(
+            lr=lr,
+            betas=betas,
+            eps=eps,
+            weight_decay=weight_decay,
+            pure_mode=pure_mode,
+            optimizer_states16=optimizer_states16,
+        )
 
         super().__init__(params, defaults)
         print(f"BFF Optimizer initialized with {defaults}")
@@ -50,6 +64,8 @@ class BFF_Optimizer(Optimizer):
             lr = group["lr"]
             weight_decay = group["weight_decay"]
             eps = group["eps"]
+            pure_mode = group["pure_mode"]
+            pure_state = group["optimizer_states16"]
 
             for p in group["params"]:
                 if p.grad is None:
@@ -62,50 +78,84 @@ class BFF_Optimizer(Optimizer):
 
                 # State initialization
                 if len(state) == 0:
-                    assert p.dtype == torch.bfloat16, "BFF requires BFloat16 datatype"
+                    if pure_mode:
+                        assert (
+                            p.dtype == torch.bfloat16
+                        ), "BFF requires BFloat16 datatype"
 
                     state["step"] = torch.tensor(0.0)
 
                     # Exponential moving average of gradient values
-                    state["exp_avg"] = torch.zeros_like(
-                        p, memory_format=torch.preserve_format
-                    )
+                    state["exp_avg"] = torch.zeros_like(p, memory_format=torch.bfloat16)
+
                     # Exponential moving average of squared gradient values
                     state["exp_avg_sq"] = torch.zeros_like(
-                        p, memory_format=torch.preserve_format
+                        p, memory_format=torch.bfloat16
                     )
 
                     # Kahan summation - accumulated error tracker
-                    state["compensation"] = torch.zeros_like(
-                        p, memory_format=torch.preserve_format
-                    )
+                    if pure_mode:
+                        state["compensation"] = torch.zeros_like(
+                            p, memory_format=torch.preserve_format
+                        )
 
                 # main processing
-
-                grad = p.grad
-                state["exp_avg"].mul_(beta1).add_(grad, alpha=1 - beta1)
-                state["exp_avg_sq"].mul_(beta2).addcmul_(
-                    grad, grad.conj(), value=1 - beta2
-                )
-                compensation = state["compensation"]
 
                 # update the steps for each param group update
                 state["step"] += 1
 
-                # weight decay, AdamW style
-                p.data.mul_(1 - lr * weight_decay)
+                grad = p.grad
+                # exp_avg = state["exp_avg"]
+
+                # exp_avg_sq = state["exp_avg_sq"]
+
+                # Decay the first and second moment running average coefficient
+                """exp_avg.mul_(beta1).add_(1 - beta1, grad)
+                exp_avg_sq.mul_(beta2).addcmul_(1 - beta2, grad, grad)
+
+                denom = exp_avg_sq.sqrt().add_(group["eps"])
+
+                bias_correction1 = 1 - beta1 ** state["step"]
+                bias_correction2 = 1 - beta2 ** state["step"]
+                """
+
+                state["exp_avg"].mul_(beta1).add_(grad, alpha=1 - beta1)
+                state["exp_avg_sq"].mul_(beta2).addcmul_(
+                    grad, grad.conj(), value=1 - beta2
+                )
+
+                if pure_mode:
+                    compensation = state["compensation"]
+
+                # weight decay, AdamW style - todo - this differs from torch impl
+                if weight_decay:
+                    p.data.mul_(1 - lr * weight_decay)
 
                 denom_correction = (1 - beta2 ** state["step"]) ** 0.5
 
                 # lr update to compensation
-                compensation.addcdiv_(
-                    state["exp_avg"],
-                    state["exp_avg_sq"].sqrt().add_(group["eps"], alpha=1),
-                    value=-lr * denom_correction,
-                )
+                if pure_mode:
+                    compensation.addcdiv_(
+                        state["exp_avg"],
+                        state["exp_avg_sq"].sqrt().add_(group["eps"], alpha=1),
+                        value=-lr * denom_correction,
+                    )
 
-                # update weights with compensation (Kahan summation)
-                # save error back to compensation for next iteration
-                buffer = p.clone()
-                p.add_(compensation)
-                compensation.add_(buffer.sub_(p))
+                    # update weights with compensation (Kahan summation)
+                    # save error back to compensation for next iteration
+                    if pure_mode:
+                        buffer = p.clone()
+                        p.add_(compensation)
+                        compensation.add_(buffer.sub_(p))
+
+                else:
+                    # if group['weight_decay'] != 0:
+                    #    grad.add_(group['weight_decay'], p.data)
+                    # step_size = lr * math.sqrt(bias_correction2) / bias_correction1
+
+                    # p.data.addcdiv_(-step_size, exp_avg, denom)
+                    p.data.addcdiv_(
+                        state["exp_avg"],
+                        state["exp_avg_sq"].sqrt().add_(group["eps"], alpha=1),
+                        value=-lr * denom_correction,
+                    )

@@ -4,6 +4,7 @@ import os
 import argparse
 
 from platformdirs import user_config_dir
+from psutil import net_if_addrs
 from datasets_grammar.grammar_dataset import grammar
 
 import torch
@@ -190,6 +191,10 @@ def setup_tasks(rank, world_size, cfg):
     # clear_gpu_cache() - need to call torch set device first?
     # set_printing()
     setup_environ_flags(cfg, rank)
+
+
+def format_stats(item, rounding=8):
+    return round(item, ndigits=rounding)
 
 
 # ----------  Training ----------------------------------------------------------
@@ -456,6 +461,7 @@ def fsdp_main(args):
         mixed_precision=mp_policy,
         device_id=torch.cuda.current_device(),
     )
+    # print(f"IMPORTANT - No mixed precision policy -fp32 running")
     # move model to gpu
     # model.to(local_rank)
 
@@ -500,11 +506,22 @@ def fsdp_main(args):
     elif cfg.pure_bfloat:
         from bff_optimizer import BFF_Optimizer
 
-        optimizer = BFF_Optimizer(model.parameters(), lr=lr, weight_decay=0.01)
+        optimizer = BFF_Optimizer(
+            model.parameters(), lr=lr, weight_decay=0.0, pure_mode=True
+        )
         if rank == 0:
             print("Optimizer set to BFF Optimizer")
+    elif cfg.pure_optimizer:
+        from bff_optimizer import BFF_Optimizer
+
+        optimizer = BFF_Optimizer(
+            model.parameters(), lr=lr, weight_decay=0.0, pure_mode=False
+        )
+        if rank == 0:
+            print("Optimizer set to BFF Optimizer with only pure OPTIMIZER STATES")
+
     else:
-        optimizer = optim.AdamW(model.parameters(), lr=lr, weight_decay=0.01)
+        optimizer = optim.AdamW(model.parameters(), lr=lr, weight_decay=0.0)
         if rank == 0:
             print(f"--> optimizer is AdamW")
 
@@ -585,10 +602,12 @@ def fsdp_main(args):
             print(f"--> epoch {epoch} completed...entering save and stats zone")
 
             total_epoch_time = time.time() - t0
+            print(f"epoch_time = {total_epoch_time}")
             dur.append(total_epoch_time)
 
-            train_acc_tracking.append(train_accuracy.item())
-            print(f"TFLOP/s/GPU: {FLOP/10**12/total_epoch_time}")
+            train_acc_tracking.append(format_stats(train_accuracy.item()))
+            net_flops = format_stats(FLOP / 10**12 / total_epoch_time, rounding=6)
+            print(f"TFLOP/s/GPU: {net_flops}")
 
             if cfg.run_validation:
                 val_acc_tracking.append(curr_val_loss.item())
