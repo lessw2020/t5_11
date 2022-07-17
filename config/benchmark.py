@@ -24,10 +24,16 @@ class benchmark_config:
     # dataloaders
     num_workers_dataloader: int = 2
 
-    # policies
+    # optimizer
+    # master weights in bf16, optimizer in bf16
     pure_bfloat = False
+    # master weights in fp32, optimizer in bf16
+    pure_optimizer = True
+
+    # policies
+
     fsdp_unit_size = 1000000
-    use_mixed_precision: bool = False
+    use_mixed_precision: bool = True
     use_fp16: bool = False
 
     hf_activation_checkpointing: bool = False
