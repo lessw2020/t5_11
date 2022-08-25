@@ -273,6 +273,21 @@ def fsdp_main(args):
     local_rank = int(os.environ["LOCAL_RANK"])
     rank = int(os.environ["RANK"])
     world_size = int(os.environ["WORLD_SIZE"])
+    
+    # debug
+    import torch
+    import os
+    print(f" --> Paths to PyTorch")
+    print(torch.__file__)
+    
+    print(f" --> Paths to PyTorch")
+    print(os.path.join(os.path.dirname(torch.__file__), '..'))
+
+    print(os.path.dirname(os.path.realpath(torch.__file__)))
+
+    print(os.path.abspath(os.path.dirname(torch.__file__)))
+
+    print(f"aborting - this is only to find the paths")
 
     if rank == 0:
         print(f"--> running with these defaults {cfg}")
