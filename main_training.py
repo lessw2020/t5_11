@@ -275,8 +275,7 @@ def fsdp_main(args):
     world_size = int(os.environ["WORLD_SIZE"])
     
     # debug
-    import torch
-    import os
+    
     print(f" --> Paths to PyTorch")
     print(torch.__file__)
     
