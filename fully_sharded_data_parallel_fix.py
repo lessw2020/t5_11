@@ -71,7 +71,6 @@ from ._utils import (
     _apply_to_tensors,
     _contains_batchnorm,
     _override_batchnorm_mixed_precision,
-    p_assert,
 )
 from .flat_param import (
     FlatParameter,
