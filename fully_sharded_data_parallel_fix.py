@@ -945,6 +945,9 @@ class FullyShardedDataParallel(nn.Module):
 
         torch._C._log_api_usage_once("torch.distributed.fsdp")
         super().__init__()
+        
+        # --- Just announce we are live
+        print(f"--> ** running with high res rate limiter update! ** ")
 
         self._ignored_modules = self._get_ignored_modules(module, ignored_modules)
         ignored_params, self._ignored_param_names = self._get_ignored_params(
