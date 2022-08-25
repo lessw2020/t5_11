@@ -971,6 +971,8 @@ class FullyShardedDataParallel(nn.Module):
 
         torch._C._log_api_usage_once("torch.distributed.fsdp")
         super().__init__()
+        
+        print(f"--> Rate limiter via gpu memory active ** ")
 
         self._ignored_modules = self._get_ignored_modules(module, ignored_modules)
         ignored_params, self._ignored_param_names = self._get_ignored_params(
