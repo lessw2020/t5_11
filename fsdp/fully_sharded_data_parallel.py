@@ -43,10 +43,9 @@ from torch.distributed.algorithms._checkpoint.checkpoint_wrapper import (
     _CHECKPOINT_PREFIX,
 )
 from torch.distributed.algorithms._comm_hooks import (
-    fp16_compress_hook,
-    bf16_compress_hook,
     default_hooks,
 )
+
 from torch.distributed.distributed_c10d import _get_default_group
 from torch.distributed.utils import (
     _replace_by_prefix,
@@ -1674,8 +1673,8 @@ class FullyShardedDataParallel(nn.Module):
         Wether a low precision hook is registered or not.
         """
         return self.communication_hook is not None and self.communication_hook in [
-            fp16_compress_hook,
-            bf16_compress_hook,
+            torch.distributed.algorithms._comm_hooks.fp16_compress_hook,
+            torch.distributed.algorithms._comm_hooks.bf16_compress_hook,
         ]
 
 
