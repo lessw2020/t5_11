@@ -951,6 +951,7 @@ class FullyShardedDataParallel(nn.Module):
         device_id: Optional[Union[int, torch.device]] = None,
         sync_module_states: bool = False,
         limit_all_gathers: bool = True,
+        gpu_pct = 0.005,
     ):
         if isinstance(auto_wrap_policy, ParamExecOrderWrapPolicy):
             self._init_param_exec_order_wrap_policy(
@@ -971,6 +972,9 @@ class FullyShardedDataParallel(nn.Module):
 
         torch._C._log_api_usage_once("torch.distributed.fsdp")
         super().__init__()
+        
+        self.gpu_pct = gpu_pct
+        print(f"--> rate limiting with gpu_pct of {self.gpu_pct}")
 
         self._ignored_modules = self._get_ignored_modules(module, ignored_modules)
         ignored_params, self._ignored_param_names = self._get_ignored_params(
@@ -1023,7 +1027,7 @@ class FullyShardedDataParallel(nn.Module):
         self.compute_device = self._get_compute_device(module, ignored_params, device_from_device_id)
         self._max_inflight_all_gather_size = (
             torch.cuda.get_device_properties(self.compute_device).total_memory
-            * 0.05  # empirically chosen
+            * self.gpu_pct  # empirically chosen
         )  # should always be non-negative
         params_to_flatten = list(self._get_orig_params(module, ignored_params))
         if sync_module_states:
