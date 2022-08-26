@@ -22,7 +22,7 @@ class train_config:
     # google/t5-v1_1-xxl #11b
 
     # save models
-    save_model: bool = True
+    save_model: bool = False
     save_folder = "training_checkpoints"
     checkpoint_max_save_count: int = (
         2  # number of 'best' checkpoints to save based on val loss
@@ -49,7 +49,7 @@ class train_config:
 
     # training
     batch_size: int = 20
-    num_epochs: int = 4
+    num_epochs: int = 2
 
     # validation
     run_validation: bool = True
