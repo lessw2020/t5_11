@@ -374,7 +374,7 @@ def fsdp_main(args):
     if rank == 0:
         print(f"Sharding strategy = {model_sharding_strategy}")
         
-    backward_policy = config.backward_policy
+    backward_policy = cfg.backward_policy
     if rank==0:
         print(f"Backward Policy = {backward_policy}")
 
