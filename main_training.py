@@ -377,6 +377,7 @@ def fsdp_main(args):
     backward_policy = cfg.backward_policy
     if rank==0:
         print(f"Backward Policy = {backward_policy}")
+        print(f"Rate Limiter On? = {cfg.use_rate_limiter}")
 
     model = FSDP(
         model,
