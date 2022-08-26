@@ -1,5 +1,8 @@
 from dataclasses import dataclass
-from torch.distributed.fsdp import ShardingStrategy
+from torch.distributed.fsdp import (
+    ShardingStrategy,
+    BackwardPrefetch,
+)
 
 
 @dataclass
@@ -34,6 +37,7 @@ class train_config:
 
     # use rate limiter
     use_rate_limiter: bool = False
+    backward_policy = BackwardPrefetch.BACKWARD_PRE
 
     # optimizer
     
