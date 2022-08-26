@@ -1,9 +1,8 @@
 
-from . import default_hooks as def_hooks
-
-from .default_hooks import *  # fp16_compress_hook, bf16_compress_hook, default_hooks
+from . import default_hooks as default
 
 LOW_PRECISION_HOOKS = [
-    def_hooks.fp16_compress_hook,
-    def_hooks.bf16_compress_hook,
+    default.fp16_compress_hook,
+    default.bf16_compress_hook,
 ]
+
