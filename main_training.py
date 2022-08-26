@@ -373,12 +373,17 @@ def fsdp_main(args):
     )  # use config, but default to normal if not available
     if rank == 0:
         print(f"Sharding strategy = {model_sharding_strategy}")
+        
+    backward_policy = config.backward_policy
+    if rank==0:
+        print(f"Backward Policy = {backward_policy}")
 
     model = FSDP(
         model,
         auto_wrap_policy=wrapping_policy,
         mixed_precision=mp_policy,
         sharding_strategy=model_sharding_strategy,
+        backward_prefetch = backward_policy,
         device_id=torch.cuda.current_device(),  # streaming init
         limit_all_gathers=cfg.use_rate_limiter, # high res memory control
     )
