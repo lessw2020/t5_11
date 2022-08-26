@@ -380,7 +380,7 @@ def fsdp_main(args):
         mixed_precision=mp_policy,
         sharding_strategy=model_sharding_strategy,
         device_id=torch.cuda.current_device(),  # streaming init
-        limit_all_gathers=True, # high res memory control
+        limit_all_gathers=cfg.use_rate_limiter, # high res memory control
     )
 
     # fsdp must do the checkpointing after sharding...

@@ -32,6 +32,12 @@ class train_config:
     sharding_strategy: ShardingStrategy = ShardingStrategy.FULL_SHARD
     print_sharding_plan: bool = False
 
+    # use rate limiter
+    use_rate_limiter: bool = True
+
+    # optimizer
+    
+
     # dataloaders
     num_workers_dataloader: int = 0
 
