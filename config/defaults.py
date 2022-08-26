@@ -33,7 +33,7 @@ class train_config:
     print_sharding_plan: bool = False
 
     # use rate limiter
-    use_rate_limiter: bool = True
+    use_rate_limiter: bool = False
 
     # optimizer
     
