@@ -44,7 +44,7 @@ class train_config:
 
     # optimizer
     optimizer_type = "anyprecision"
-    variance_dtype = torch.bfloat16
+    variance_dtype = torch.float32
 
     # dataloaders
     num_workers_dataloader: int = 0
