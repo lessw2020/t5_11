@@ -1063,7 +1063,7 @@ class FullyShardedDataParallel(nn.Module):
         )
         self._max_inflight_all_gather_size = (
             torch.cuda.get_device_properties(self.compute_device).total_memory
-            * 0.05  # empirically chosen, e.g. 200 MB limit for 40 GB GPU
+            * 0.0005  # empirically chosen, e.g. 200 MB limit for 40 GB GPU
         )  # should always be non-negative
         params_to_flatten = list(self._get_orig_params(module, ignored_params))
         if sync_module_states:
