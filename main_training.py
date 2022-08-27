@@ -268,7 +268,6 @@ def fsdp_main(args):
     torch.cuda.manual_seed(cfg.seed)
     torch.manual_seed(cfg.seed)
 
-
     # torchrun specific
     local_rank = int(os.environ["LOCAL_RANK"])
     rank = int(os.environ["RANK"])
@@ -373,20 +372,23 @@ def fsdp_main(args):
     )  # use config, but default to normal if not available
     if rank == 0:
         print(f"Sharding strategy = {model_sharding_strategy}")
-        
+
     backward_policy = cfg.backward_policy
-    if rank==0:
+    if rank == 0:
         print(f"Backward Policy = {backward_policy}")
-        print(f"Rate Limiter On? = {cfg.use_rate_limiter}")
+        print(f"Using Rate Limiter = {cfg.use_rate_limiter}")
+        if cfg.use_rate_limiter:
+            print(f"Rate Limit = {cfg.rate_limit_size}")
 
     model = FSDP(
         model,
         auto_wrap_policy=wrapping_policy,
         mixed_precision=mp_policy,
         sharding_strategy=model_sharding_strategy,
-        backward_prefetch = backward_policy,
+        backward_prefetch=backward_policy,
         device_id=torch.cuda.current_device(),  # streaming init
-        limit_all_gathers=cfg.use_rate_limiter, # high res memory control
+        limit_all_gathers=cfg.use_rate_limiter,  # high res memory control
+        limit_size=cfg.rate_limit_size,
     )
 
     # fsdp must do the checkpointing after sharding...
@@ -576,6 +578,12 @@ def fsdp_main(args):
         if cfg.run_validation:
             print(f"Validation accuracy: {val_acc_tracking}")
             print(f"\n Best Val accuracy: {best_val_loss}")
+
+        print(f" Settings again ===")
+        print(f"Backward Policy = {backward_policy}")
+        print(f"Using Rate Limiter = {cfg.use_rate_limiter}")
+        if cfg.use_rate_limiter:
+            print(f"Rate Limit = {cfg.rate_limit_size}\n")
 
         # memory summary
         if cfg.memory_report and rank == 0:

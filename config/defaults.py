@@ -37,6 +37,7 @@ class train_config:
 
     # use rate limiter
     use_rate_limiter: bool = True
+    rate_limit_size = 0.05
     backward_policy = BackwardPrefetch.BACKWARD_PRE
 
     # optimizer
