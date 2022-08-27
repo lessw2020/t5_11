@@ -4,6 +4,8 @@ from torch.distributed.fsdp import (
     BackwardPrefetch,
 )
 
+import torch
+
 
 @dataclass
 class train_config:
@@ -36,11 +38,13 @@ class train_config:
     print_sharding_plan: bool = False
 
     # use rate limiter
-    use_rate_limiter: bool = True
+    use_rate_limiter: bool = False
     rate_limit_size = 0.05
     backward_policy = BackwardPrefetch.BACKWARD_PRE
 
     # optimizer
+    optimizer_type = "anyprecision"
+    variance_dtype = torch.bfloat16
 
     # dataloaders
     num_workers_dataloader: int = 0
@@ -58,8 +62,8 @@ class train_config:
     dataset_test = "datasets_grammar/grammar_validation.csv"
 
     # training
-    batch_size: int = 20
-    num_epochs: int = 2
+    batch_size: int = 48
+    num_epochs: int = 4
 
     # validation
     run_validation: bool = True

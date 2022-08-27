@@ -424,26 +424,39 @@ def fsdp_main(args):
 
     lr = 0.0008
     gamma = 0.85
-    if cfg.use_child_tuning:
+    weight_decay = 0.005
+
+    if cfg.optimizer_type == "anyprecision":
+        from anyprecision_optimizer import AnyPrecisionAdamW
+
+        optimizer = AnyPrecisionAdamW(
+            model.parameters(),
+            lr=lr,
+            weight_decay=weight_decay,
+            variance_dtype=cfg.variance_dtype,
+            use_kahan_summation=False,
+        )
+        if rank == 0:
+            print(
+                f"-->  AnyPrecision optimizer running, variance type = {cfg.variance_dtype} "
+            )
+
+    elif cfg.optimizer_type == "childtuning":
         if cfg.use_task_free:
             optimizer = ChildTuningAdamW(
                 model.parameters(),
                 lr=lr,
-                weight_decay=0.01,
+                weight_decay=weight_decay,
                 reserve_p=cfg.percent_F,
                 mode="taskfree",
             )
             if rank == 0:
                 print(f"--> child free tuning with {cfg.percent_F} percentage ")
-    elif cfg.use_mirror_optimizer:
-        optimizer = mirror(model.parameters(), lr=cfg.lr)
-        if rank == 0:
-            print(f"--> using Mirror optimizer with lr = {cfg.lr}")
 
     else:
-        optimizer = optim.AdamW(model.parameters(), lr=lr)
+        optimizer = optim.AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
         if rank == 0:
-            print(f"--> AdamW whole model tuning with ")
+            print(f"--> AdamW whole model tuning with AdamW")
 
     scheduler = StepLR(optimizer, step_size=1, gamma=gamma)
     epochs = cfg.num_epochs
