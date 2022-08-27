@@ -109,10 +109,20 @@ if _TORCH_FX_AVAIL:
 
 
 __all__ = [
-    "FullyShardedDataParallel", "ShardingStrategy", "MixedPrecision",
-    "CPUOffload", "BackwardPrefetch", "StateDictType", "StateDictConfig",
-    "FullStateDictConfig", "LocalStateDictConfig", "ShardedStateDictConfig",
-    "OptimStateKeyType", "TrainingState_", "p_assert", "clean_tensor_name",
+    "FullyShardedDataParallel",
+    "ShardingStrategy",
+    "MixedPrecision",
+    "CPUOffload",
+    "BackwardPrefetch",
+    "StateDictType",
+    "StateDictConfig",
+    "FullStateDictConfig",
+    "LocalStateDictConfig",
+    "ShardedStateDictConfig",
+    "OptimStateKeyType",
+    "TrainingState_",
+    "p_assert",
+    "clean_tensor_name",
 ]
 
 
@@ -151,6 +161,7 @@ class ShardingStrategy(Enum):
                                   ``NO_SHARD`` inter-node.
 
     """
+
     FULL_SHARD = auto()
     SHARD_GRAD_OP = auto()
     NO_SHARD = auto()
@@ -195,6 +206,7 @@ class MixedPrecision:
         would occur in the `param_dtype` precision, if given, otherwise, in the
         original parameter precision.
     """
+
     # maintain a tensor of this dtype that the fp32 param shard will be cast to.
     # Will control the precision of model params, inputs, and thus compute as
     # well.
@@ -297,6 +309,7 @@ class StateDictType(Enum):
     LOCAL_STATE_DICT = auto()
     SHARDED_STATE_DICT = auto()
 
+
 @dataclass
 class StateDictConfig:
     """
@@ -305,7 +318,9 @@ class StateDictConfig:
     order to configure settings for the particular type of ``state_dict``
     implementation FSDP will use.
     """
+
     pass
+
 
 @dataclass
 class FullStateDictConfig(StateDictConfig):
@@ -335,22 +350,27 @@ class FullStateDictConfig(StateDictConfig):
         >>> fsdp = FSDP(model, device_id=torch.cuda.current_device(), auto_wrap_policy=..., sync_module_states=True)
         >>> # After this point, all ranks have FSDP model with loaded checkpoint.
     """
+
     offload_to_cpu: bool = False
     rank0_only: bool = False
+
 
 @dataclass
 class LocalStateDictConfig(StateDictConfig):
     pass
 
+
 @dataclass
 class ShardedStateDictConfig(StateDictConfig):
     pass
+
 
 _state_dict_type_to_config = {
     StateDictType.FULL_STATE_DICT: FullStateDictConfig,
     StateDictType.LOCAL_STATE_DICT: LocalStateDictConfig,
     StateDictType.SHARDED_STATE_DICT: ShardedStateDictConfig,
 }
+
 
 class OptimStateKeyType(Enum):
     PARAM_NAME = auto()
@@ -365,9 +385,10 @@ HandlesKey = Tuple[FlatParamHandle, ...]
 
 class _ExecOrderWarnStatus(Enum):
     """Used internally for execution order validation."""
-    NONE = auto()     # no deviation yet
+
+    NONE = auto()  # no deviation yet
     WARNING = auto()  # deviated this iteration; currently issuing warnings
-    WARNED = auto()   # deviated in a previous iteration
+    WARNED = auto()  # deviated in a previous iteration
 
 
 class _ExecOrderData:
@@ -389,9 +410,10 @@ class _ExecOrderData:
         self.handles_to_post_forward_order_index: Dict[HandlesKey, int] = {}
         self.handles_post_forward_order: List[int] = []
         self.is_first_iter: Optional[bool] = None
-        self._checking_order: bool = (
-            debug_level in [dist.DebugLevel.INFO, dist.DebugLevel.DETAIL]
-        )
+        self._checking_order: bool = debug_level in [
+            dist.DebugLevel.INFO,
+            dist.DebugLevel.DETAIL,
+        ]
 
         # The following are only used if distributed debug level >= INFO
         self.process_group: Optional[dist.ProcessGroup] = None
@@ -445,7 +467,9 @@ class _ExecOrderData:
         """
         if backward_prefetch == BackwardPrefetch.BACKWARD_PRE:
             # Prefetch using the reverse post-forward order
-            current_index = self.handles_to_post_forward_order_index.get(current_handles_key, None)
+            current_index = self.handles_to_post_forward_order_index.get(
+                current_handles_key, None
+            )
             if current_index is None:
                 return None
             target_index = current_index - 1
@@ -454,7 +478,9 @@ class _ExecOrderData:
             return self.handles_post_forward_order[target_index]
         elif backward_prefetch == BackwardPrefetch.BACKWARD_POST:
             # Prefetch using the reverse pre-forward order
-            current_index = self.handles_to_pre_forward_order_index.get(current_handles_key, None)
+            current_index = self.handles_to_pre_forward_order_index.get(
+                current_handles_key, None
+            )
             if current_index is None:
                 return None
             target_index = current_index - 1
@@ -462,7 +488,9 @@ class _ExecOrderData:
                 return None
             return self.handles_pre_forward_order[target_index]
         else:
-            raise AssertionError(f"Unsupported `backward_prefetch`: {backward_prefetch}")
+            raise AssertionError(
+                f"Unsupported `backward_prefetch`: {backward_prefetch}"
+            )
 
     def record_post_forward(self, handles: List[FlatParamHandle]) -> None:
         """
@@ -653,7 +681,9 @@ class _ExecOrderData:
                 continue
             handle = self.all_handles[index]
             flat_param = handle.flat_param
-            prefixed_param_names.append(self.flat_param_to_prefixed_param_names[flat_param])
+            prefixed_param_names.append(
+                self.flat_param_to_prefixed_param_names[flat_param]
+            )
         return prefixed_param_names
 
     def _get_names_from_handles(
@@ -670,7 +700,9 @@ class _ExecOrderData:
             flat_param = handle.flat_param
             if flat_param not in self.flat_param_to_prefixed_param_names:
                 continue
-            prefixed_param_names.append(self.flat_param_to_prefixed_param_names[flat_param])
+            prefixed_param_names.append(
+                self.flat_param_to_prefixed_param_names[flat_param]
+            )
         return prefixed_param_names
 
     def next_iter(self):
@@ -695,12 +727,14 @@ class _ExecOrderData:
 
 class FreeEvent(NamedTuple):
     """This tracks the free corresponding to an all-gather."""
+
     cuda_event: torch.cuda.Event
     size: int  # size in bytes being freed
 
 
 class FreeEventQueue:
     """This tracks all pending frees corresponding to in-flight all-gathers."""
+
     def __init__(self) -> None:
         self._queue: Deque[FreeEvent] = collections.deque()
         self.queue_size: int = 0  # maintain to avoid iterating over the queue
@@ -715,9 +749,9 @@ class FreeEventQueue:
         if self._queue:
             event = self._queue.popleft()
             self.queue_size -= event.size
-            assert self.queue_size >= 0, (
-                f"Queue is corrupted: `self.queue_size`: {self.queue_size}"
-            )
+            assert (
+                self.queue_size >= 0
+            ), f"Queue is corrupted: `self.queue_size`: {self.queue_size}"
             return event
         return None
 
@@ -938,6 +972,7 @@ class FullyShardedDataParallel(nn.Module):
             the sharded strategies that schedule all-gathers.
             TODO (awgu): Explain the implications on GPU memory.
     """
+
     def __init__(
         self,
         module: nn.Module,
@@ -1018,13 +1053,17 @@ class FullyShardedDataParallel(nn.Module):
         self._buffer_name_to_orig_dtype: Dict[str, torch.dtype] = {}
 
         self._check_single_device_module(module, ignored_params)
-        device_from_device_id: Optional[torch.device] = self._get_device_from_device_id(device_id)
+        device_from_device_id: Optional[torch.device] = self._get_device_from_device_id(
+            device_id
+        )
         self._materialize_module(module, param_init_fn, device_from_device_id)
         self._move_module_to_device(module, ignored_params, device_from_device_id)
-        self.compute_device = self._get_compute_device(module, ignored_params, device_from_device_id)
+        self.compute_device = self._get_compute_device(
+            module, ignored_params, device_from_device_id
+        )
         self._max_inflight_all_gather_size = (
             torch.cuda.get_device_properties(self.compute_device).total_memory
-            * 0.005  # empirically chosen, e.g. 200 MB limit for 40 GB GPU
+            * 0.05  # empirically chosen, e.g. 200 MB limit for 40 GB GPU
         )  # should always be non-negative
         params_to_flatten = list(self._get_orig_params(module, ignored_params))
         if sync_module_states:
@@ -1055,7 +1094,10 @@ class FullyShardedDataParallel(nn.Module):
             self.params.append(handle.flat_param)
             self._register_param_handle(handle)
             handle.shard(self.process_group)
-            if self.cpu_offload.offload_params and handle.flat_param.device != torch.device("cpu"):
+            if (
+                self.cpu_offload.offload_params
+                and handle.flat_param.device != torch.device("cpu")
+            ):
                 with torch.no_grad():
                     handle._flat_param_to(torch.device("cpu"))
 
@@ -1098,9 +1140,7 @@ class FullyShardedDataParallel(nn.Module):
             StateDictType.LOCAL_STATE_DICT: self._local_pre_load_state_dict_hook,
             StateDictType.SHARDED_STATE_DICT: self._sharded_pre_load_state_dict_hook,
         }
-        self.register_load_state_dict_post_hook(
-            self._post_load_state_dict_hook
-        )
+        self.register_load_state_dict_post_hook(self._post_load_state_dict_hook)
         self._post_load_state_dict_hook_fn = {
             StateDictType.FULL_STATE_DICT: self._full_post_load_state_dict_hook,
             StateDictType.LOCAL_STATE_DICT: self._local_post_load_state_dict_hook,
@@ -1271,8 +1311,7 @@ class FullyShardedDataParallel(nn.Module):
         self,
         device_id: Optional[Union[int, torch.device]],
     ) -> Optional[torch.device]:
-        """
-        """
+        """ """
         if device_id is None:
             return None
         device = (
@@ -1326,7 +1365,9 @@ class FullyShardedDataParallel(nn.Module):
             param_init_fn(module)
         elif is_meta_module:
             # Run default meta device initialization
-            materialization_device = device_from_device_id or torch.cuda.current_device()
+            materialization_device = (
+                device_from_device_id or torch.cuda.current_device()
+            )
             module.to_empty(device=materialization_device)
             try:
                 with torch.no_grad():
@@ -1452,7 +1493,10 @@ class FullyShardedDataParallel(nn.Module):
                 module_states.append(buffer.detach())
         module_states.extend(param.detach() for param in params)
         _sync_params_and_buffers(
-            self.process_group, module_states, _PARAM_BROADCAST_BUCKET_SIZE, src=0,
+            self.process_group,
+            module_states,
+            _PARAM_BROADCAST_BUCKET_SIZE,
+            src=0,
         )
 
     def _get_orig_params(
@@ -1606,9 +1650,10 @@ class FullyShardedDataParallel(nn.Module):
             the input ``module``.
         """
         return [
-            submodule for submodule in module.modules()
-            if isinstance(submodule, FullyShardedDataParallel) and
-            (not root_only or submodule.check_is_root())
+            submodule
+            for submodule in module.modules()
+            if isinstance(submodule, FullyShardedDataParallel)
+            and (not root_only or submodule.check_is_root())
         ]
 
     def apply(self, fn: Callable[[nn.Module], None]) -> "FullyShardedDataParallel":
@@ -1687,6 +1732,7 @@ class FullyShardedDataParallel(nn.Module):
         precision given by ``dtype``, while respecting the existing
         ``requires_grad`` on the tensors.
         """
+
         def cast_fn(x: torch.Tensor) -> torch.Tensor:
             if not torch.is_floating_point(x):
                 return x
@@ -1700,7 +1746,7 @@ class FullyShardedDataParallel(nn.Module):
         with torch.no_grad():
             return (
                 _apply_to_tensors(cast_fn, args),
-                _apply_to_tensors(cast_fn, kwargs)
+                _apply_to_tensors(cast_fn, kwargs),
             )
 
     def _cast_buffers(
@@ -1734,9 +1780,15 @@ class FullyShardedDataParallel(nn.Module):
         if memo is None:
             memo = set()
         for module in self.modules():
-            if module is not self and isinstance(module, FullyShardedDataParallel) and recurse:
+            if (
+                module is not self
+                and isinstance(module, FullyShardedDataParallel)
+                and recurse
+            ):
                 # Allow any child FSDP instances to handle their own buffers.
-                module._cast_buffers(device=device, dtype=dtype, memo=memo, recurse=recurse)
+                module._cast_buffers(
+                    device=device, dtype=dtype, memo=memo, recurse=recurse
+                )
             elif module not in memo:
                 memo.add(module)
                 for name, buf in module.named_buffers(recurse=False):
@@ -1822,7 +1874,9 @@ class FullyShardedDataParallel(nn.Module):
                     fsdp_module.limit_all_gathers = self.limit_all_gathers
                 fsdp_module._free_event_queue = self._free_event_queue
                 fsdp_module._handles_prefetched = self._handles_prefetched
-                fsdp_module._needs_pre_backward_unshard = self._needs_pre_backward_unshard
+                fsdp_module._needs_pre_backward_unshard = (
+                    self._needs_pre_backward_unshard
+                )
                 for handle in fsdp_module._handles:
                     fsdp_module._init_param_attributes(handle)
         if inconsistent_limit_all_gathers:
@@ -1901,13 +1955,11 @@ class FullyShardedDataParallel(nn.Module):
         # fwd/bwd, it is freed and we only hold on to the full precision shard.
         # As a result, this reduced precision shard is not allocated if we are
         # not in the forward/backward pass.
-        if (
-            self._mixed_precision_enabled_for_params()
-        ):
+        if self._mixed_precision_enabled_for_params():
             p._mp_shard = torch.zeros_like(
                 p._local_shard,
                 device=self.compute_device,
-                dtype=self.mixed_precision.param_dtype
+                dtype=self.mixed_precision.param_dtype,
             )
             _free_storage(p._mp_shard)
 
@@ -1922,7 +1974,8 @@ class FullyShardedDataParallel(nn.Module):
             # into full_param_padded it can occur without issues and result in
             # full_param_padded having the expected param_dtype.
             full_param_dtype = (
-                p.dtype if not self._mixed_precision_enabled_for_params()
+                p.dtype
+                if not self._mixed_precision_enabled_for_params()
                 else self.mixed_precision.param_dtype
             )
             p._full_param_padded = torch.zeros(  # type: ignore[attr-defined]
@@ -2011,7 +2064,7 @@ class FullyShardedDataParallel(nn.Module):
         p_assert(
             training_state in valid_training_states,
             f"Prefetching is only supported in {valid_training_states} but "
-            f"currently in {training_state}"
+            f"currently in {training_state}",
         )
         eod = self._exec_order_data
         if (
@@ -2019,7 +2072,8 @@ class FullyShardedDataParallel(nn.Module):
             and self.backward_prefetch == BackwardPrefetch.BACKWARD_PRE
         ):
             target_handles_key = eod.get_handles_to_backward_prefetch(
-                current_handles_key, self.backward_prefetch,
+                current_handles_key,
+                self.backward_prefetch,
             )
             if target_handles_key is not None:
                 target_training_state = self._get_training_state(target_handles_key)
@@ -2033,7 +2087,8 @@ class FullyShardedDataParallel(nn.Module):
             and self.backward_prefetch == BackwardPrefetch.BACKWARD_POST
         ):
             target_handles_key = eod.get_handles_to_backward_prefetch(
-                current_handles_key, self.backward_prefetch,
+                current_handles_key,
+                self.backward_prefetch,
             )
             if target_handles_key is not None:
                 target_training_state = self._get_training_state(target_handles_key)
@@ -2053,7 +2108,7 @@ class FullyShardedDataParallel(nn.Module):
         training_states = set(handle._training_state for handle in handles_key)
         p_assert(
             len(training_states) == 1,
-            f"Expects uniform training state but got {training_states}"
+            f"Expects uniform training state but got {training_states}",
         )
         return next(iter(training_states))
 
@@ -2108,7 +2163,9 @@ class FullyShardedDataParallel(nn.Module):
                     "All FSDP modules should have the same type of state_dict_config."
                 )
 
-            expected_state_dict_config_type = _state_dict_type_to_config[state_dict_type]
+            expected_state_dict_config_type = _state_dict_type_to_config[
+                state_dict_type
+            ]
             if expected_state_dict_config_type != type(state_dict_config):
                 raise RuntimeError(
                     f"Expected state_dict_config of type {expected_state_dict_config_type} but got {type(state_dict_config)}"
@@ -2126,9 +2183,10 @@ class FullyShardedDataParallel(nn.Module):
 
     @property
     def _param_fqns(self) -> Iterator[Tuple[str, str, str]]:
-        for param_name, module_name in (
-            self._fsdp_wrapped_module.handle.parameter_module_names()
-        ):
+        for (
+            param_name,
+            module_name,
+        ) in self._fsdp_wrapped_module.handle.parameter_module_names():
             module_name = module_name.replace(f"{FPW_MODULE}.", "")
             module_name = module_name.replace(f"{FPW_MODULE}", "")
             if module_name:
@@ -2177,7 +2235,7 @@ class FullyShardedDataParallel(nn.Module):
             # do not have prefix considered as they are not computed in `state_dict`
             # call.
             if clean_key.startswith(clean_prefix):
-                clean_key = clean_key[len(clean_prefix):]
+                clean_key = clean_key[len(clean_prefix) :]
 
             # Clone non-ignored parameters before exiting the
             # `_summon_full_params()` context
@@ -2186,8 +2244,9 @@ class FullyShardedDataParallel(nn.Module):
                 f"only has {state_dict.keys()}. prefix={prefix}, "
                 f"module_name={module_name} param_name={param_name} rank={self.rank}."
             )
-            if clean_key not in self._ignored_param_names and \
-                    not getattr(state_dict[fqn], "_has_been_cloned", False):
+            if clean_key not in self._ignored_param_names and not getattr(
+                state_dict[fqn], "_has_been_cloned", False
+            ):
                 try:
                     state_dict[fqn] = state_dict[fqn].clone().detach()
                     state_dict[fqn]._has_been_cloned = True  # type: ignore[attr-defined]
@@ -2278,7 +2337,7 @@ class FullyShardedDataParallel(nn.Module):
                     rank=self.rank,
                     world_size=self.world_size,
                     device_per_node=torch.cuda.device_count(),
-                    pg=self.process_group
+                    pg=self.process_group,
                 )  # type: ignore[assignment]
         state_dict.pop(f"{prefix}{FLAT_PARAM}")
         return state_dict
@@ -2296,15 +2355,14 @@ class FullyShardedDataParallel(nn.Module):
         what postprocessing will be done.
         """
         self = cast(FullyShardedDataParallel, module)
-        processed_state_dict = self._post_state_dict_hook_fn[self._state_dict_type](state_dict, prefix)
+        processed_state_dict = self._post_state_dict_hook_fn[self._state_dict_type](
+            state_dict, prefix
+        )
         # Restore buffers, which currently are in their full precision type,
         # back to their mixed precision type. This is because buffers are cast
         # during lazy_init() and stay at their mixed precision type before/after
         # forward/backward. As a result state_dict() should maintain this.
-        if (
-            self._is_root
-            and self._mixed_precision_enabled_for_buffers()
-        ):
+        if self._is_root and self._mixed_precision_enabled_for_buffers():
             self._cast_buffers(recurse=True)
         return processed_state_dict
 
@@ -2355,17 +2413,21 @@ class FullyShardedDataParallel(nn.Module):
         if self._state_dict_type == StateDictType.FULL_STATE_DICT:
             # Get config args
             full_state_dict_config = (
-                self._state_dict_config if self._state_dict_config is not None
+                self._state_dict_config
+                if self._state_dict_config is not None
                 else FullStateDictConfig()
             )
             rank0_only = full_state_dict_config.rank0_only
             offload_to_cpu = full_state_dict_config.offload_to_cpu
             summon_ctx = (
                 self._summon_full_params(
-                    recurse=False, writeback=False, offload_to_cpu=offload_to_cpu, rank0_only=rank0_only
+                    recurse=False,
+                    writeback=False,
+                    offload_to_cpu=offload_to_cpu,
+                    rank0_only=rank0_only,
                 )
-                if self.training_state != TrainingState_.SUMMON_FULL_PARAMS else
-                contextlib.suppress()
+                if self.training_state != TrainingState_.SUMMON_FULL_PARAMS
+                else contextlib.suppress()
             )
             with summon_ctx:
                 # Since buffers are not sharded and stay casted, restore them to their
@@ -2374,10 +2436,7 @@ class FullyShardedDataParallel(nn.Module):
                 # buffers stay casted after forward/backward. We must have the
                 # call here instead of above because _summon_full_params itself
                 # calls _lazy_init() which would cast the buffers.
-                if (
-                    self._is_root
-                    and self._mixed_precision_enabled_for_buffers()
-                ):
+                if self._is_root and self._mixed_precision_enabled_for_buffers():
                     self._cast_buffers(
                         dtype=self._buffer_name_to_orig_dtype, recurse=False
                     )
@@ -2390,12 +2449,12 @@ class FullyShardedDataParallel(nn.Module):
                 return {}
 
         elif (
-            self._state_dict_type == StateDictType.LOCAL_STATE_DICT or
-            self._state_dict_type == StateDictType.SHARDED_STATE_DICT
+            self._state_dict_type == StateDictType.LOCAL_STATE_DICT
+            or self._state_dict_type == StateDictType.SHARDED_STATE_DICT
         ):
             if (
-                self._fsdp_wrapped_module.flat_param is not None and
-                not self._fsdp_wrapped_module.handle.uses_sharded_strategy
+                self._fsdp_wrapped_module.flat_param is not None
+                and not self._fsdp_wrapped_module.handle.uses_sharded_strategy
             ):
                 raise RuntimeError(
                     "sharded_state_dict/local_state_dict can only be called "
@@ -2417,7 +2476,7 @@ class FullyShardedDataParallel(nn.Module):
     def _full_post_load_state_dict_hook(self, *args, **kwargs) -> None:
         # We should exit summon_full_params context.
         self._assert_state([TrainingState_.SUMMON_FULL_PARAMS])
-        assert getattr(self, '_full_param_ctx', None) is not None
+        assert getattr(self, "_full_param_ctx", None) is not None
         self._full_param_ctx.__exit__(None, None, None)
         self._full_param_ctx = None
 
@@ -2438,11 +2497,9 @@ class FullyShardedDataParallel(nn.Module):
     ) -> None:
         # We do not expect to be calling pre-hooks twice without post-hook
         # call in between.
-        assert getattr(self, '_full_param_ctx', None) is None
+        assert getattr(self, "_full_param_ctx", None) is None
         # Note that it needs writeback=True to persist.
-        self._full_param_ctx = self._summon_full_params(
-            recurse=False, writeback=True
-        )
+        self._full_param_ctx = self._summon_full_params(recurse=False, writeback=True)
         self._full_param_ctx.__enter__()
         _replace_by_prefix(state_dict, prefix, prefix + f"{FSDP_WRAPPED_MODULE}.")
 
@@ -2462,9 +2519,9 @@ class FullyShardedDataParallel(nn.Module):
         _replace_by_prefix(state_dict, prefix, f"{prefix}{FSDP_WRAPPED_MODULE}.")
         fqn = f"{prefix}{FSDP_WRAPPED_MODULE}.{FLAT_PARAM}"
         if fqn not in state_dict:
-            assert getattr(self._fsdp_wrapped_module, FLAT_PARAM, None) is None, (
-                "No flat parameter in state_dict but self._fsdp_wrapped_module.flat_param is not None"
-            )
+            assert (
+                getattr(self._fsdp_wrapped_module, FLAT_PARAM, None) is None
+            ), "No flat parameter in state_dict but self._fsdp_wrapped_module.flat_param is not None"
             return
         load_tensor = state_dict[fqn]
         assert isinstance(
@@ -2515,7 +2572,11 @@ class FullyShardedDataParallel(nn.Module):
         # gather all the parameters in this layer. This can be achieved by
         # concatenated all the local shards and then append the padding.
         # https://github.com/pytorch/pytorch/issues/77461
-        for (param_name, _, module_name) in self._fsdp_wrapped_module.handle.flat_param._param_infos:
+        for (
+            param_name,
+            _,
+            module_name,
+        ) in self._fsdp_wrapped_module.handle.flat_param._param_infos:
             module_name = module_name.replace(f"{FPW_MODULE}.", "")
             module_name = module_name.replace(f"{FPW_MODULE}", "")
             if module_name:
@@ -2543,11 +2604,15 @@ class FullyShardedDataParallel(nn.Module):
 
         # Create a new flat_param from the loaded, non-sharded tensors.
         flat_param = self._fsdp_wrapped_module.flat_param
-        loaded_flat_param = FlatParamHandle.flatten_params(nonsharded_tensors, requires_grad=False)
+        loaded_flat_param = FlatParamHandle.flatten_params(
+            nonsharded_tensors, requires_grad=False
+        )
 
         # Get the chunk from the loaded flat_param for the local rank.
         loaded_flat_param, num_to_pad = FlatParamHandle._get_shard(
-            loaded_flat_param, self.rank, self.world_size,
+            loaded_flat_param,
+            self.rank,
+            self.world_size,
         )
         assert flat_param.numel() == loaded_flat_param.numel(), (
             f"The loaded local chunk has different numel({flat_param.numel()}) "
@@ -2661,7 +2726,9 @@ class FullyShardedDataParallel(nn.Module):
         Runs the forward pass for the wrapped module, inserting FSDP-specific
         pre- and post-forward sharding logic.
         """
-        with torch.autograd.profiler.record_function("FullyShardedDataParallel.forward"):
+        with torch.autograd.profiler.record_function(
+            "FullyShardedDataParallel.forward"
+        ):
             self._lazy_init()
             args, kwargs = self._fsdp_root_pre_forward(*args, **kwargs)
             unused = None
@@ -2674,7 +2741,8 @@ class FullyShardedDataParallel(nn.Module):
             # for backward computation (though this may not be true)
             free_unsharded_flat_params = [
                 not self._is_root
-                and handle._config.sharding_strategy == HandleShardingStrategy.FULL_SHARD
+                and handle._config.sharding_strategy
+                == HandleShardingStrategy.FULL_SHARD
                 for handle in self._handles
             ]
             reshard_fn = functools.partial(
@@ -2686,7 +2754,9 @@ class FullyShardedDataParallel(nn.Module):
             for handle in self._handles:
                 assert handle.flat_param.device == self.compute_device
             output = self._fsdp_wrapped_module(*args, **kwargs)
-            return self._post_forward(self._handles, reshard_fn, unused, unused, unused, output)
+            return self._post_forward(
+                self._handles, reshard_fn, unused, unused, unused, output
+            )
 
     def _pre_forward(
         self,
@@ -2715,7 +2785,9 @@ class FullyShardedDataParallel(nn.Module):
             module (nn.Module): Unused; expected by the hook signature.
             input (Any): Unused; expected by the hook signature.
         """
-        with torch.autograd.profiler.record_function("FullyShardedDataParallel.forward"):
+        with torch.autograd.profiler.record_function(
+            "FullyShardedDataParallel.forward"
+        ):
             self.training_state = TrainingState_.FORWARD
             self._exec_order_data.record_pre_forward(handles)
             for handle in handles:
@@ -2773,7 +2845,9 @@ class FullyShardedDataParallel(nn.Module):
         Postcondition: Each ``FlatParameter`` 's data points to the sharded
         flattened parameter.
         """
-        with torch.autograd.profiler.record_function("FullyShardedDataParallel.forward"):
+        with torch.autograd.profiler.record_function(
+            "FullyShardedDataParallel.forward"
+        ):
             self._exec_order_data.record_post_forward(handles)
             if reshard_fn is not None:
                 reshard_fn()
@@ -2800,7 +2874,9 @@ class FullyShardedDataParallel(nn.Module):
         if self._mixed_precision_enabled_for_params():
             input_dtype = self.mixed_precision.param_dtype
             args, kwargs = self._cast_fp_inputs_to_dtype(
-                input_dtype, *args, **kwargs,
+                input_dtype,
+                *args,
+                **kwargs,
             )
         return args, kwargs
 
@@ -2829,7 +2905,7 @@ class FullyShardedDataParallel(nn.Module):
         rank0_only: bool = False,
         offload_to_cpu: bool = False,
     ) -> Generator:
-        r""" A context manager to expose full params for FSDP instances.
+        r"""A context manager to expose full params for FSDP instances.
         Can be useful *after* forward/backward for a model to get
         the params for additional processing or checking. It can take a non-FSDP
         module and will summon full params for all contained FSDP modules as
@@ -2951,7 +3027,9 @@ class FullyShardedDataParallel(nn.Module):
         for handle in self._handles:
             handle._training_state = HandleTrainingState.SUMMON_FULL_PARAMS
 
-        free_unsharded_flat_params = [handle.needs_unshard() for handle in self._handles]
+        free_unsharded_flat_params = [
+            handle.needs_unshard() for handle in self._handles
+        ]
         self._unshard(self._handles)
         torch.cuda.current_stream().wait_stream(self._streams["all_gather"])
 
@@ -3004,8 +3082,10 @@ class FullyShardedDataParallel(nn.Module):
             # Get the unpadded shard instead of the padded shard to persist
             # user changes to the padding (though FSDP does not explicitly
             # support this)
-            shard, _ = FlatParamHandle._get_unpadded_shard(handle.flat_param, handle.rank, handle.world_size)
-            handle.flat_param._local_shard[:shard.numel()].copy_(shard)
+            shard, _ = FlatParamHandle._get_unpadded_shard(
+                handle.flat_param, handle.rank, handle.world_size
+            )
+            handle.flat_param._local_shard[: shard.numel()].copy_(shard)
 
     def named_buffers(
         self,
@@ -3181,11 +3261,16 @@ class FullyShardedDataParallel(nn.Module):
         ):
             # First hook callback will see PRE state. If we have multiple params,
             # then subsequent hook callbacks will see POST state.
-            self._assert_state([TrainingState_.BACKWARD_PRE, TrainingState_.BACKWARD_POST])
+            self._assert_state(
+                [TrainingState_.BACKWARD_PRE, TrainingState_.BACKWARD_POST]
+            )
             self.training_state = TrainingState_.BACKWARD_POST
             handle._training_state = HandleTrainingState.POST_BACKWARD
 
-            if self._use_param_exec_order_policy() and self._param_exec_order_prep_stage:
+            if (
+                self._use_param_exec_order_policy()
+                and self._param_exec_order_prep_stage
+            ):
                 # In self._fsdp_params_exec_order, the parameters are ordered based on
                 # the execution order in the backward pass in the first iteration.
                 self._fsdp_params_exec_order.append(param)
@@ -3232,7 +3317,9 @@ class FullyShardedDataParallel(nn.Module):
                     # TODO: Make this a communication hook when communication hooks
                     # are implemented for FSDP. Note that this is a noop if the
                     # reduce_dtype matches the param dtype.
-                    param.grad.data = param.grad.data.to(self.mixed_precision.reduce_dtype)
+                    param.grad.data = param.grad.data.to(
+                        self.mixed_precision.reduce_dtype
+                    )
 
                 if self._exec_order_data.is_first_iter:
                     # For all sharding strategies communication is performed through `_communication_hook`:
@@ -3241,11 +3328,11 @@ class FullyShardedDataParallel(nn.Module):
                     # and `_communication_hook_state`, required for communication not `None`.`
                     p_assert(
                         self._communication_hook is not None,
-                        "Communication hook should not be None"
+                        "Communication hook should not be None",
                     )
                     p_assert(
                         self._communication_hook_state is not None,
-                        "Communication hook state should not be None"
+                        "Communication hook state should not be None",
                     )
                 grad = param.grad.data
                 if handle.uses_sharded_strategy:
@@ -3267,7 +3354,9 @@ class FullyShardedDataParallel(nn.Module):
                     num_pad = self.world_size * chunks[0].numel() - grad.numel()
                     input_flattened = F.pad(grad_flatten, [0, num_pad])
                     output = torch.zeros_like(chunks[0])
-                    self._communication_hook(self._communication_hook_state, input_flattened, output)
+                    self._communication_hook(
+                        self._communication_hook_state, input_flattened, output
+                    )
 
                     self._cast_grad_to_param_dtype(output, param)
 
@@ -3282,13 +3371,13 @@ class FullyShardedDataParallel(nn.Module):
                             param._saved_grad_shard.shape == output.shape,  # type: ignore[attr-defined]
                             "Shape mismatch when accumulating gradients: "  # type: ignore[attr-defined]
                             f"existing grad shape={param._saved_grad_shard.shape} "
-                            f"new grad shape={output.shape}"  # type: ignore[attr-defined]
+                            f"new grad shape={output.shape}",  # type: ignore[attr-defined]
                         )
                         p_assert(
                             param._saved_grad_shard.device == output.device,  # type: ignore[attr-defined]
                             "Device mismatch when accumulating gradients: "  # type: ignore[attr-defined]
                             f"existing grad device={param._saved_grad_shard.device} "
-                            f"new grad device={output.device}"  # type: ignore[attr-defined]
+                            f"new grad device={output.device}",  # type: ignore[attr-defined]
                         )
                         param._saved_grad_shard += output  # type: ignore[attr-defined]
                     else:
@@ -3296,7 +3385,9 @@ class FullyShardedDataParallel(nn.Module):
                     grad = param._saved_grad_shard  # type: ignore[attr-defined]
                 else:
                     if self.sharding_strategy == ShardingStrategy.NO_SHARD:
-                        self._communication_hook(self._communication_hook_state, param.grad)
+                        self._communication_hook(
+                            self._communication_hook_state, param.grad
+                        )
 
                     self._cast_grad_to_param_dtype(param.grad, param)
 
@@ -3336,12 +3427,9 @@ class FullyShardedDataParallel(nn.Module):
         dtype cast happens in the hook instead.
         """
         self._assert_state(TrainingState_.BACKWARD_POST)
-        if (
-            not self._low_precision_hook_enabled()
-            and (
-                self._mixed_precision_enabled_for_params()
-                or self._mixed_precision_enabled_for_reduce()
-            )
+        if not self._low_precision_hook_enabled() and (
+            self._mixed_precision_enabled_for_params()
+            or self._mixed_precision_enabled_for_reduce()
         ):
             low_prec_grad_data = grad.data
             grad.data = grad.data.to(dtype=param.dtype)
@@ -3416,28 +3504,29 @@ class FullyShardedDataParallel(nn.Module):
                         p_assert(
                             p.device == torch.device("cpu"),
                             f"Device mismatch: p={p.device} "  # type: ignore[attr-defined]
-                            f"p._cpu_grad={p._cpu_grad}"
+                            f"p._cpu_grad={p._cpu_grad}",
                         )
                         p.grad = p._cpu_grad  # type: ignore[attr-defined]
                     elif hasattr(p, "_saved_grad_shard"):
                         p_assert(
                             p.device == p._saved_grad_shard.device,  # type: ignore[attr-defined]
                             f"Device mismatch: p={p.device} "  # type: ignore[attr-defined]
-                            f"p._saved_grad_shard={p._saved_grad_shard.device}"
+                            f"p._saved_grad_shard={p._saved_grad_shard.device}",
                         )
                         p.grad = p._saved_grad_shard  # type: ignore[attr-defined]
                     else:
                         p_assert(
-                            not handle.uses_sharded_strategy or not p._post_backward_called,
+                            not handle.uses_sharded_strategy
+                            or not p._post_backward_called,
                             "All sharded parameters that received a gradient "
-                            "should use `_saved_grad_shard`"
+                            "should use `_saved_grad_shard`",
                         )
                     if hasattr(p, "_saved_grad_shard"):
                         delattr(p, "_saved_grad_shard")
 
                     p_assert(
-                        hasattr(p, '_post_backward_called'),
-                        "Expected flag _post_backward_called to be set on param."
+                        hasattr(p, "_post_backward_called"),
+                        "Expected flag _post_backward_called to be set on param.",
                     )
                     # Reset _post_backward_called in preparation for the next iteration.
                     p._post_backward_called = False
@@ -3577,7 +3666,9 @@ class FullyShardedDataParallel(nn.Module):
         """
         self._lazy_init()
         self._wait_for_previous_optim_step()
-        assert self._is_root, "clip_grad_norm should only be called on the root (parent) instance"
+        assert (
+            self._is_root
+        ), "clip_grad_norm should only be called on the root (parent) instance"
         self._assert_state(TrainingState_.IDLE)
 
         max_norm = float(max_norm)
@@ -3586,16 +3677,20 @@ class FullyShardedDataParallel(nn.Module):
         local_norm = _calc_grad_norm(self.params_with_grad, norm_type).cuda()  # type: ignore[arg-type]
         if norm_type == math.inf:
             total_norm = local_norm
-            dist.all_reduce(total_norm, op=torch.distributed.ReduceOp.MAX, group=self.process_group)
+            dist.all_reduce(
+                total_norm, op=torch.distributed.ReduceOp.MAX, group=self.process_group
+            )
         else:
-            total_norm = local_norm ** norm_type
+            total_norm = local_norm**norm_type
             dist.all_reduce(total_norm, group=self.process_group)
             total_norm = total_norm ** (1.0 / norm_type)
 
         if self.cpu_offload:
             total_norm = total_norm.cpu()
 
-        clip_coef = torch.tensor(max_norm, dtype=total_norm.dtype, device=total_norm.device) / (total_norm + 1e-6)
+        clip_coef = torch.tensor(
+            max_norm, dtype=total_norm.dtype, device=total_norm.device
+        ) / (total_norm + 1e-6)
         if clip_coef < 1:
             # multiply by clip_coef, aka, (max_norm/total_norm).
             for p in self.params_with_grad:
@@ -3606,9 +3701,12 @@ class FullyShardedDataParallel(nn.Module):
     def full_optim_state_dict(
         model: torch.nn.Module,
         optim: torch.optim.Optimizer,
-        optim_input: Optional[Union[
-            List[Dict[str, Any]], Iterable[torch.nn.Parameter],
-        ]] = None,
+        optim_input: Optional[
+            Union[
+                List[Dict[str, Any]],
+                Iterable[torch.nn.Parameter],
+            ]
+        ] = None,
         rank0_only: bool = True,
         group: Optional[dist.ProcessGroup] = None,
     ) -> Dict[str, Any]:
@@ -3676,7 +3774,8 @@ class FullyShardedDataParallel(nn.Module):
         optim: torch.optim.Optimizer,
         optim_input: Optional[
             Union[
-                List[Dict[str, Any]], Iterable[torch.nn.Parameter],
+                List[Dict[str, Any]],
+                Iterable[torch.nn.Parameter],
             ]
         ] = None,
         group: Optional[dist.ProcessGroup] = None,
@@ -3714,9 +3813,12 @@ class FullyShardedDataParallel(nn.Module):
     def shard_full_optim_state_dict(
         full_optim_state_dict: Dict[str, Any],
         model: torch.nn.Module,
-        optim_input: Optional[Union[
-            List[Dict[str, Any]], Iterable[torch.nn.Parameter],
-        ]] = None,
+        optim_input: Optional[
+            Union[
+                List[Dict[str, Any]],
+                Iterable[torch.nn.Parameter],
+            ]
+        ] = None,
     ) -> Dict[str, Any]:
         """
         Shards the full optimizer state dict ``full_optim_state_dict`` by
@@ -3773,7 +3875,9 @@ class FullyShardedDataParallel(nn.Module):
             restricted to only include this rank's part of the optimizer state.
         """
         sharded_osd = _flatten_optim_state_dict(
-            full_optim_state_dict, model, True,
+            full_optim_state_dict,
+            model,
+            True,
         )
         return _rekey_sharded_optim_state_dict(sharded_osd, model, optim_input)
 
@@ -3783,7 +3887,8 @@ class FullyShardedDataParallel(nn.Module):
         model: torch.nn.Module,
         optim_input: Optional[
             Union[
-                List[Dict[str, Any]], Iterable[torch.nn.Parameter],
+                List[Dict[str, Any]],
+                Iterable[torch.nn.Parameter],
             ]
         ] = None,
     ) -> Dict[str, Any]:
@@ -3820,9 +3925,12 @@ class FullyShardedDataParallel(nn.Module):
     def scatter_full_optim_state_dict(
         full_optim_state_dict: Optional[Dict[str, Any]],
         model: torch.nn.Module,
-        optim_input: Optional[Union[
-            List[Dict[str, Any]], Iterable[torch.nn.Parameter],
-        ]] = None,
+        optim_input: Optional[
+            Union[
+                List[Dict[str, Any]],
+                Iterable[torch.nn.Parameter],
+            ]
+        ] = None,
         group: Optional[Any] = None,
     ) -> Dict[str, Any]:
         """
@@ -3884,8 +3992,9 @@ class FullyShardedDataParallel(nn.Module):
         world_size = dist.get_world_size(group)
         # Check for a valid broadcast device, preferring GPU when available
         using_nccl = dist.distributed_c10d._check_for_nccl_backend(group)
-        broadcast_device = torch.device("cuda") if torch.cuda.is_available() \
-            else torch.device("cpu")
+        broadcast_device = (
+            torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+        )
         if using_nccl and not torch.cuda.is_available():
             raise RuntimeError("NCCL requires a GPU for collectives")
         # Flatten the optimizer state dict and construct a copy with the
@@ -3903,13 +4012,19 @@ class FullyShardedDataParallel(nn.Module):
         # Broadcast the optim state dict without positive-dimension tensor
         # state and the FSDP parameter IDs from rank 0 to all ranks
         processed_osd = _broadcast_processed_optim_state_dict(
-            processed_osd if rank == 0 else None, rank, group,
+            processed_osd if rank == 0 else None,
+            rank,
+            group,
         )
         # Broadcast positive-dimension tensor state (both sharded tensors for
         # FSDP parameters and unsharded tensors for non-FSDP parameters)
         sharded_osd = _broadcast_pos_dim_tensor_states(
-            processed_osd, flat_osd if rank == 0 else None, rank, world_size,
-            group, broadcast_device,
+            processed_osd,
+            flat_osd if rank == 0 else None,
+            rank,
+            world_size,
+            group,
+            broadcast_device,
         )
         # Rekey the optimizer state dict to use parameter IDs according to this
         # rank's `optim_input`
@@ -3921,9 +4036,12 @@ class FullyShardedDataParallel(nn.Module):
         optim_state_dict: Dict[str, Any],
         optim_state_key_type: OptimStateKeyType,
         model: torch.nn.Module,
-        optim_input: Optional[Union[
-            List[Dict[str, Any]], Iterable[torch.nn.Parameter],
-        ]] = None,
+        optim_input: Optional[
+            Union[
+                List[Dict[str, Any]],
+                Iterable[torch.nn.Parameter],
+            ]
+        ] = None,
     ) -> Dict[str, Any]:
         """
         Re-keys the optimizer state dict ``optim_state_dict`` to use the key
@@ -3957,25 +4075,27 @@ class FullyShardedDataParallel(nn.Module):
             Dict[str, Any]: The optimizer state dict re-keyed using the
             parameter keys specified by ``optim_state_key_type``.
         """
-        assert optim_state_key_type in \
-            (OptimStateKeyType.PARAM_NAME, OptimStateKeyType.PARAM_ID)
+        assert optim_state_key_type in (
+            OptimStateKeyType.PARAM_NAME,
+            OptimStateKeyType.PARAM_ID,
+        )
         osd = optim_state_dict  # alias
         # Validate that the existing parameter keys are uniformly typed
-        uses_param_name_mask = [
-            type(param_key) is str for param_key in osd["state"]
-        ]
-        uses_param_id_mask = [
-            type(param_key) is int for param_key in osd["state"]
-        ]
-        if (any(uses_param_name_mask) and not all(uses_param_name_mask)) or \
-                (any(uses_param_id_mask) and not all(uses_param_id_mask)):
+        uses_param_name_mask = [type(param_key) is str for param_key in osd["state"]]
+        uses_param_id_mask = [type(param_key) is int for param_key in osd["state"]]
+        if (any(uses_param_name_mask) and not all(uses_param_name_mask)) or (
+            any(uses_param_id_mask) and not all(uses_param_id_mask)
+        ):
             error_msg = f"Invalid parameter keys: {osd['state'].keys()}"
             raise ValueError(error_msg)
         # Return directly if the existing key type matches the target key type
-        if (optim_state_key_type == OptimStateKeyType.PARAM_NAME and
-            all(uses_param_name_mask)) or \
-            (optim_state_key_type == OptimStateKeyType.PARAM_ID and
-                all(uses_param_id_mask)):
+        if (
+            optim_state_key_type == OptimStateKeyType.PARAM_NAME
+            and all(uses_param_name_mask)
+        ) or (
+            optim_state_key_type == OptimStateKeyType.PARAM_ID
+            and all(uses_param_id_mask)
+        ):
             return osd
         # Otherwise, actually perform the re-keying
         new_osd = {}
@@ -3991,10 +4111,12 @@ class FullyShardedDataParallel(nn.Module):
             }
             new_osd["param_groups"] = copy.deepcopy(osd["param_groups"])
             for param_group in new_osd["param_groups"]:
-                param_group["params"] = sorted([
-                    param_id_to_param_name[param_id]
-                    for param_id in param_group["params"]
-                ])
+                param_group["params"] = sorted(
+                    [
+                        param_id_to_param_name[param_id]
+                        for param_id in param_group["params"]
+                    ]
+                )
             return new_osd
         elif optim_state_key_type == OptimStateKeyType.PARAM_ID:  # name -> ID
             param_name_to_param = _get_param_name_to_param(model)
@@ -4012,10 +4134,12 @@ class FullyShardedDataParallel(nn.Module):
             }
             new_osd["param_groups"] = copy.deepcopy(osd["param_groups"])
             for param_group in new_osd["param_groups"]:
-                param_group["params"] = sorted([
-                    param_name_to_param_id[param_name]
-                    for param_name in param_group["params"]
-                ])
+                param_group["params"] = sorted(
+                    [
+                        param_name_to_param_id[param_name]
+                        for param_name in param_group["params"]
+                    ]
+                )
             return new_osd
         return new_osd  # should never reach here
 
@@ -4074,15 +4198,19 @@ class FullyShardedDataParallel(nn.Module):
 
         """
         if not self.check_is_root():
-            raise AssertionError("register_comm_hook can only be called on a root instance.")
+            raise AssertionError(
+                "register_comm_hook can only be called on a root instance."
+            )
         for submodule in self.fsdp_modules(self):
-            assert not submodule._hook_registered, "communication hook can be only registered once"
+            assert (
+                not submodule._hook_registered
+            ), "communication hook can be only registered once"
             submodule._hook_registered = True
-            assert submodule._communication_hook == self._get_default_comm_hook(),\
-                f"communication hook should be default, but it is {submodule._communication_hook.__name__} instead"
+            assert (
+                submodule._communication_hook == self._get_default_comm_hook()
+            ), f"communication hook should be default, but it is {submodule._communication_hook.__name__} instead"
             submodule._communication_hook_state = state
             submodule._communication_hook = hook
-
 
     def _init_param_exec_order_wrap_policy(self, *args, **kwargs) -> None:
         auto_wrap_policy = kwargs["auto_wrap_policy"]
@@ -4092,10 +4220,7 @@ class FullyShardedDataParallel(nn.Module):
             assert (
                 auto_wrap_policy.tracing_config is None
             ), "tracing_config should be None when torch.fx is not enabled"
-        elif isinstance(
-            auto_wrap_policy.tracing_config,
-            TracingConfig
-        ):
+        elif isinstance(auto_wrap_policy.tracing_config, TracingConfig):
             tracer = auto_wrap_policy.tracing_config.tracer
             execution_info = _init_execution_info(module)
 
@@ -4129,8 +4254,7 @@ class FullyShardedDataParallel(nn.Module):
         # A list that stores the flatten parameters and its name based on the parameter execution order
         self._fsdp_params_exec_order: List[FlatParameter] = []
         if _TORCH_FX_AVAIL and isinstance(
-            auto_wrap_policy.tracing_config,
-            TracingConfig
+            auto_wrap_policy.tracing_config, TracingConfig
         ):
             # Initialize a dict that maps each module to its parent FSDP wrap
             module_to_fsdp: Dict[nn.Module, FullyShardedDataParallel] = dict()
@@ -4156,8 +4280,7 @@ class FullyShardedDataParallel(nn.Module):
 
     def _use_param_exec_order_policy(self) -> bool:
         return (
-            hasattr(self, "_param_exec_order_policy")
-            and self._param_exec_order_policy
+            hasattr(self, "_param_exec_order_policy") and self._param_exec_order_policy
         )
 
     def _is_param_exec_order_prep_stage(self) -> bool:
@@ -4167,8 +4290,8 @@ class FullyShardedDataParallel(nn.Module):
         )
         if not is_prep_stage:
             for p in self.parameters():
-                assert (
-                    not hasattr(p, "_params_exec_order_hook_handle")
+                assert not hasattr(
+                    p, "_params_exec_order_hook_handle"
                 ), "When not in execution order prep stage, all _params_exec_order_hook_handle should be removed."
         return is_prep_stage
 
@@ -4205,7 +4328,9 @@ def _calc_grad_norm(parameters: List[torch.nn.Parameter], p: float) -> torch.Ten
     if len(parameters) == 0:
         return torch.tensor(0.0)
     if p == math.inf:
-        local_norm = torch.tensor(max(par.grad.detach().abs().max() for par in parameters))
+        local_norm = torch.tensor(
+            max(par.grad.detach().abs().max() for par in parameters)
+        )
     else:
         # Compute the norm in full precision no matter what
         local_norm = torch.linalg.vector_norm(
@@ -4242,13 +4367,15 @@ def _get_param_to_unflat_param_names(
             in the module walk order; if ``False``, then includes all of the
             unflattened parameter names.
     """
+
     def module_fn(module, prefix, param_to_unflat_param_names):
         # For FSDP modules, only add the entry when considering the contained
         # `FlattenParamsWrapper` to avoid duplication
         if not isinstance(module, FullyShardedDataParallel):
             for param_name, param in module.named_parameters(recurse=False):
                 module_prefixed_param_names = (
-                    param._prefixed_param_names if isinstance(param, FlatParameter)
+                    param._prefixed_param_names
+                    if isinstance(param, FlatParameter)
                     else [param_name]
                 )  # prefixed from `module`
                 fully_prefixed_param_names = [
@@ -4261,14 +4388,19 @@ def _get_param_to_unflat_param_names(
                 if not is_shared_param:
                     param_to_unflat_param_names[param] = fully_prefixed_param_names
                 elif not dedup_shared_params:
-                    param_to_unflat_param_names[param].extend(fully_prefixed_param_names)
+                    param_to_unflat_param_names[param].extend(
+                        fully_prefixed_param_names
+                    )
 
     def return_fn(param_to_unflat_param_names):
         return param_to_unflat_param_names
 
     param_to_unflat_param_names: Dict[torch.nn.Parameter, List[str]] = {}
     return _apply_to_modules(
-        model, module_fn, return_fn, param_to_unflat_param_names,
+        model,
+        module_fn,
+        return_fn,
+        param_to_unflat_param_names,
     )
 
 
@@ -4289,16 +4421,16 @@ def _get_param_to_param_name(
     """
     param_to_param_names = _get_param_to_unflat_param_names(model)
     for param_names in param_to_param_names.values():
-        assert len(param_names) > 0, "`_get_param_to_unflat_param_names()` " \
-            "should not construct empty lists"
+        assert len(param_names) > 0, (
+            "`_get_param_to_unflat_param_names()` " "should not construct empty lists"
+        )
         if len(param_names) > 1:
             raise RuntimeError(
                 "Each parameter should only map to one parameter name but got "
                 f"{len(param_names)}: {param_names}"
             )
     param_to_param_name = {
-        param: param_names[0]
-        for param, param_names in param_to_param_names.items()
+        param: param_names[0] for param, param_names in param_to_param_names.items()
     }
     return param_to_param_name
 
