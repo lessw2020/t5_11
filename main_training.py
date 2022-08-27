@@ -380,6 +380,13 @@ def fsdp_main(args):
         if cfg.use_rate_limiter:
             print(f"Rate Limit = {cfg.rate_limit_size}")
 
+    if cfg.model_in_bf16:
+        model.to(torch.bfloat16)
+        mp_policy = None
+
+        if rank == 0:
+            print(f"Model in BF16, all training in BF16")
+
     model = FSDP(
         model,
         auto_wrap_policy=wrapping_policy,
@@ -433,12 +440,13 @@ def fsdp_main(args):
             model.parameters(),
             lr=lr,
             weight_decay=weight_decay,
+            momentum_dtype=cfg.momentum_dtype,
             variance_dtype=cfg.variance_dtype,
-            use_kahan_summation=False,
+            use_kahan_summation=cfg.use_kahan,
         )
         if rank == 0:
             print(
-                f"-->  AnyPrecision optimizer running, variance type = {cfg.variance_dtype} "
+                f"-->  AnyPrecision optimizer running, momentum = {cfg.momentum_dtype}, variance type = {cfg.variance_dtype}, kahan = {cfg.use_kahan} "
             )
 
     elif cfg.optimizer_type == "childtuning":

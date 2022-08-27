@@ -33,6 +33,9 @@ class train_config:
         2  # number of 'best' checkpoints to save based on val loss
     )
 
+    # model weights
+    model_in_bf16 = True
+
     # sharding policy
     sharding_strategy: ShardingStrategy = ShardingStrategy.FULL_SHARD
     print_sharding_plan: bool = False
@@ -44,7 +47,9 @@ class train_config:
 
     # optimizer
     optimizer_type = "anyprecision"
-    variance_dtype = torch.float32
+    momentum_dtype = torch.bfloat16
+    variance_dtype = torch.bfloat16
+    use_kahan = True
 
     # dataloaders
     num_workers_dataloader: int = 0
