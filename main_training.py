@@ -433,7 +433,21 @@ def fsdp_main(args):
     gamma = 0.85
     weight_decay = 0.005
 
-    if cfg.optimizer_type == "anyprecision":
+    if cfg.optimizer_type == "int8":
+        from anyprecision_quant import AnyPrecisionAdamW
+
+        optimizer = AnyPrecisionAdamW(
+            model.parameters(),
+            lr=lr,
+            weight_decay=weight_decay,
+            momentum_dtype=torch.float32,
+            variance_dtype=torch.uint8,
+            use_kahan_summation=False,
+        )
+        if rank == 0:
+            print(f"-->  AnyPrecision INT8 optimizer running, variance_type = UINT8 bq")
+
+    elif cfg.optimizer_type == "anyprecision":
         from anyprecision_optimizer import AnyPrecisionAdamW
 
         optimizer = AnyPrecisionAdamW(

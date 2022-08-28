@@ -34,7 +34,7 @@ class train_config:
     )
 
     # model weights
-    model_in_bf16 = True
+    model_in_bf16 = False
 
     # sharding policy
     sharding_strategy: ShardingStrategy = ShardingStrategy.FULL_SHARD
@@ -46,10 +46,10 @@ class train_config:
     backward_policy = BackwardPrefetch.BACKWARD_PRE
 
     # optimizer
-    optimizer_type = "anyprecision"
+    optimizer_type = "int8"
     momentum_dtype = torch.bfloat16
     variance_dtype = torch.bfloat16
-    use_kahan = True
+    use_kahan = False
 
     # dataloaders
     num_workers_dataloader: int = 0
