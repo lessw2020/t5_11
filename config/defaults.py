@@ -46,8 +46,8 @@ class train_config:
     backward_policy = BackwardPrefetch.BACKWARD_PRE
 
     # optimizer
-    optimizer_type = "int8"
-    momentum_dtype = torch.bfloat16
+    optimizer_type = "AnyPrecision"
+    momentum_dtype = torch.bfloat32
     variance_dtype = torch.bfloat16
     use_kahan = False
 
@@ -67,7 +67,7 @@ class train_config:
     dataset_test = "datasets_grammar/grammar_validation.csv"
 
     # training
-    batch_size: int = 48
+    batch_size: int = 32
     num_epochs: int = 4
 
     # validation
