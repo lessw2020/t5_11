@@ -47,7 +47,7 @@ class train_config:
 
     # optimizer
     optimizer_type = "AnyPrecision"
-    momentum_dtype = torch.bfloat32
+    momentum_dtype = torch.float32
     variance_dtype = torch.bfloat16
     use_kahan = False
 
