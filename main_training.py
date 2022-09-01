@@ -447,7 +447,7 @@ def fsdp_main(args):
         if rank == 0:
             print(f"-->  AnyPrecision INT8 optimizer running, variance_type = UINT8 bq")
 
-    elif cfg.optimizer_type == "anyprecision":
+    elif cfg.optimizer_type == "anyprecision" or cfg.optimizer_type == "AnyPrecision":
         from anyprecision_optimizer import AnyPrecisionAdamW
 
         optimizer = AnyPrecisionAdamW(
