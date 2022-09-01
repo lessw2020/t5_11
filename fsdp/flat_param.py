@@ -22,7 +22,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch import Tensor
 
-from ._utils import p_assert
+from ._utils import _alloc_storage, _free_storage, p_assert
 
 __all__ = [
     "FlatParameter",
@@ -594,13 +594,9 @@ class FlatParamHandle:
     def pre_unshard(self):
         """
         Postcondition: ``self.flat_param`` 's data is on the device for
-            communication and is what should be all-gathered. This means that
-            it matches the dtype of the expected unsharded parameter.
+        communication and is what should be all-gathered. This means that it
+        matches the dtype of the expected unsharded parameter.
         """
-        if self.uses_sharded_strategy and not self.needs_unshard():
-            # Do not prepare the sharded flattened parameter for an all-gather
-            # if the handle does not need to be unsharded
-            return
         if self._uses_param_mixed_precision and not self._force_full_precision:
             self._use_low_precision_shard()
         elif self._config.offload_params and self.flat_param.device != self.device:
@@ -626,6 +622,16 @@ class FlatParamHandle:
         )
         # Invariant: `_mp_shard` is always on the compute device.
         flat_param.data = flat_param._mp_shard  # type: ignore[attr-defined]
+
+    def needs_pre_unshard(self) -> bool:
+        """Returns if this handle needs the pre-unshard."""
+        if self.uses_sharded_strategy and not self.needs_unshard():
+            # Do not prepare the sharded flattened parameter for an all-gather
+            # if the handle does not need to be unsharded
+            return False
+        return (
+            self._config.offload_params or self._uses_param_mixed_precision
+        )
 
     def unshard(self):
         """
@@ -801,8 +807,8 @@ class FlatParamHandle:
         copy and (2) there is no use case for the sharded flattened parameter.
 
         Precondition: ``self.flat_param`` 's data is the unpadded unsharded
-            flattened parameter on the compute device, and the handle uses a
-            sharded strategy.
+        flattened parameter on the compute device, and the handle uses a
+        sharded strategy.
         Postcondition: Same as the precondition.
         """
         self._check_sharded_strategy()
@@ -813,9 +819,8 @@ class FlatParamHandle:
         self._check_on_compute_device(self.flat_param)
         # Check that the unpadded unsharded flattened parameter is a view into
         # the padded unsharded flattened parameter as expected
-        # TODO (awgu): For correctness, this check is not strictly needed.
-        # However, the user should not be doing parameter swapping with
-        # `self.flat_param` either.
+        # NOTE: This check is not strictly needed for correctness but is a
+        # useful sanity check since the tensor should only be used internally.
         unpadded_storage_ptr = self.flat_param.storage().data_ptr()
         padded_storage_ptr = (
             self._get_padded_unsharded_flat_param().storage().data_ptr()
@@ -857,7 +862,7 @@ class FlatParamHandle:
         precision sharded flattened parameter.
 
         Precondition: ``self.flat_param`` 's data points to the full precision
-            sharded flattened parameter.
+        sharded flattened parameter.
         """
         # For `NO_SHARD`, `_mp_shard` is not freed in the post-unshard since
         # it is also the low precision *unsharded* flattened parameter. Hence,
@@ -1068,42 +1073,3 @@ class FlatParamHandle:
             self._training_state == HandleTrainingState.SUMMON_FULL_PARAMS
             and self._uses_param_mixed_precision
         )
-
-
-@torch.no_grad()
-def _alloc_storage(tensor: torch.Tensor, size: torch.Size) -> bool:
-    """
-    Allocate storage for ``tensor`` with the given size.
-
-    Returns:
-        bool: ``True`` if this method allocated storage and ``False`` if the
-        storage was already allocated.
-    """
-    already_allocated = tensor.storage().size() == size.numel()
-    if not already_allocated:
-        tensor_storage_size = tensor.storage().size()
-        p_assert(
-            tensor_storage_size == 0,
-            f"Tensor storage should have been resized to be 0 but got {tensor_storage_size}",
-        )
-        tensor.storage().resize_(size.numel())
-    return not already_allocated
-
-
-@torch.no_grad()
-def _free_storage(tensor: torch.Tensor) -> bool:
-    """
-    Frees the underlying storage of ``tensor``.
-
-    Returns:
-        bool: ``True`` if the method freed the storage and ``False`` if the
-        storage was already freed.
-    """
-    already_freed = tensor.storage().size() == 0
-    if not already_freed:
-        p_assert(
-            tensor.storage_offset() == 0,
-            "Freeing a tensor's storage is unsafe when it is not the sole occupant",
-        )
-        tensor.storage().resize_(0)
-    return not already_freed
