@@ -72,7 +72,7 @@ class train_config:
 
     # validation
     run_validation: bool = True
-    val_batch_size = 20
+    val_batch_size = 8
     block_for_validation: bool = False
 
     # logging
