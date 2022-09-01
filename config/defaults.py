@@ -67,7 +67,7 @@ class train_config:
     dataset_test = "datasets_grammar/grammar_validation.csv"
 
     # training
-    batch_size: int = 32
+    batch_size: int = 8
     num_epochs: int = 4
 
     # validation
