@@ -733,11 +733,9 @@ class FreeEventQueue:
     heuristic for the flush is based on the number of inflight all-gathers.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, inflight_max) -> None:
         self._queue: Deque[torch.cuda.Event] = collections.deque()
-        self._max_num_inflight_all_gathers = (
-            self.inflight_max
-        )  # empirically chosen default
+        self._max_num_inflight_all_gathers = inflight_max  # empirically chosen default
 
     def enqueue(self, free_event: torch.cuda.Event) -> None:
         """Enqueues a free event."""
@@ -1116,7 +1114,7 @@ class FullyShardedDataParallel(nn.Module):
         # The following attributes are owned by the root FSDP instance and
         # shared with non-root FSDP instances
         self._streams: Dict[str, torch.cuda.Stream] = {}
-        self._free_event_queue = FreeEventQueue()
+        self._free_event_queue = FreeEventQueue(self.inflight_max)
         self._debug_level = dist.get_debug_level()
         self._exec_order_data = _ExecOrderData(self._debug_level)
         self._handles_prefetched: Dict[HandlesKey, bool] = {}
