@@ -394,11 +394,15 @@ def fsdp_main(args):
         sharding_strategy=model_sharding_strategy,
         backward_prefetch=backward_policy,
         device_id=torch.cuda.current_device(),  # streaming init
-        limit_all_gathers=cfg.use_rate_limiter,  # high res memory control
-        limit_size=cfg.rate_limit_size,
+        limit_all_gathers=cfg.use_rate_limiter,
+        inflight_max=cfg.inflight_max,
     )
 
     # fsdp must do the checkpointing after sharding...
+    if rank == 0:
+        print(
+            f"Rate Limiting is {cfg.use_rate_limiter}, inflight count = {cfg.inflight_max}"
+        )
 
     if cfg.fsdp_activation_checkpointing:
         policies.apply_fsdp_checkpointing(model)
