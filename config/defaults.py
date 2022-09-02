@@ -48,7 +48,7 @@ class train_config:
     # optimizer
     optimizer_type = "AnyPrecision"
     momentum_dtype = torch.float32
-    variance_dtype = torch.bfloat16
+    variance_dtype = torch.float32
     use_kahan = False
 
     # dataloaders
@@ -67,12 +67,12 @@ class train_config:
     dataset_test = "datasets_grammar/grammar_validation.csv"
 
     # training
-    batch_size: int = 8
-    num_epochs: int = 4
+    batch_size: int = 12
+    num_epochs: int = 2
 
     # validation
     run_validation: bool = True
-    val_batch_size = 8
+    val_batch_size = 12
     block_for_validation: bool = False
 
     # logging
