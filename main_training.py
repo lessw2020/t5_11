@@ -622,7 +622,7 @@ def fsdp_main(args):
         print(f"Backward Policy = {backward_policy}")
         print(f"Using Rate Limiter = {cfg.use_rate_limiter}")
         if cfg.use_rate_limiter:
-            print(f"Rate Limit = {cfg.rate_limit_size}\n")
+            print(f"Rate Limit = {cfg.inflight_max}\n")
 
         # memory summary
         if cfg.memory_report and rank == 0:
