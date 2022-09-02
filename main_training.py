@@ -378,7 +378,7 @@ def fsdp_main(args):
         print(f"Backward Policy = {backward_policy}")
         print(f"Using Rate Limiter = {cfg.use_rate_limiter}")
         if cfg.use_rate_limiter:
-            print(f"Rate Limit = {cfg.rate_limit_size}")
+            print(f"Rate Limit = {cfg.inflight_max}")
 
     if cfg.model_in_bf16:
         model.to(torch.bfloat16)
