@@ -42,7 +42,7 @@ class train_config:
 
     # use rate limiter
     use_rate_limiter: bool = True
-    inflight_max = 3
+    inflight_max = 2
     backward_policy = BackwardPrefetch.BACKWARD_PRE
 
     # optimizer
@@ -67,12 +67,12 @@ class train_config:
     dataset_test = "datasets_grammar/grammar_validation.csv"
 
     # training
-    batch_size: int = 12
+    batch_size: int = 18
     num_epochs: int = 2
 
     # validation
     run_validation: bool = True
-    val_batch_size = 12
+    val_batch_size = 18
     block_for_validation: bool = False
 
     # logging
