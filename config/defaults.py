@@ -34,7 +34,7 @@ class train_config:
     )
 
     # model weights
-    model_in_bf16 = False
+    model_in_bf16 = True
 
     # sharding policy
     sharding_strategy: ShardingStrategy = ShardingStrategy.FULL_SHARD
@@ -47,9 +47,9 @@ class train_config:
 
     # optimizer
     optimizer_type = "AnyPrecision"
-    momentum_dtype = torch.float32
-    variance_dtype = torch.float32
-    use_kahan = False
+    momentum_dtype = torch.bfloat16
+    variance_dtype = torch.bfloat16
+    use_kahan = True
 
     # dataloaders
     num_workers_dataloader: int = 0
@@ -68,7 +68,7 @@ class train_config:
 
     # training
     batch_size: int = 22
-    num_epochs: int = 2
+    num_epochs: int = 4
 
     # validation
     run_validation: bool = True
