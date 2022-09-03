@@ -34,7 +34,7 @@ class train_config:
     )
 
     # model weights
-    model_in_bf16 = True
+    model_in_bf16 = False
 
     # sharding policy
     sharding_strategy: ShardingStrategy = ShardingStrategy.FULL_SHARD
