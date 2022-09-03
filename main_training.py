@@ -623,6 +623,7 @@ def fsdp_main(args):
         print(f"Using Rate Limiter = {cfg.use_rate_limiter}")
         if cfg.use_rate_limiter:
             print(f"Rate Limit = {cfg.inflight_max}\n")
+        print(f"Batch size = {cfg.batch_size}")
 
         # memory summary
         if cfg.memory_report and rank == 0:
