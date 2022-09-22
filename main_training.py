@@ -276,6 +276,7 @@ def fsdp_main(args):
     if rank == 0:
         print(f"--> running with these defaults {cfg}")
         time_of_run = get_date_of_run()
+        print(f"\n**--> Torch Version = {torch.__version__}\n")
 
     setup_tasks(rank, world_size, cfg)
 
@@ -395,7 +396,7 @@ def fsdp_main(args):
         backward_prefetch=backward_policy,
         device_id=torch.cuda.current_device(),  # streaming init
         limit_all_gathers=cfg.use_rate_limiter,
-        inflight_max=cfg.inflight_max,
+        # inflight_max=cfg.inflight_max,
     )
 
     # fsdp must do the checkpointing after sharding...

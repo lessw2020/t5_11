@@ -16,7 +16,7 @@ class train_config:
     seed: int = 2022
 
     # model
-    model_name = "google/t5-v1_1-xxl"  # "google/t5-v1_1-small"
+    model_name = "t5-large"  # "google/t5-v1_1-small"
     tokenizer = "t5-large"
     # available models
     ## t5-base
@@ -34,7 +34,7 @@ class train_config:
     )
 
     # model weights
-    model_in_bf16 = True
+    model_in_bf16 = False
 
     # sharding policy
     sharding_strategy: ShardingStrategy = ShardingStrategy.FULL_SHARD
@@ -68,7 +68,7 @@ class train_config:
 
     # training
     batch_size: int = 22
-    num_epochs: int = 4
+    num_epochs: int = 1
 
     # validation
     run_validation: bool = True
