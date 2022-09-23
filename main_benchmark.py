@@ -367,11 +367,14 @@ def fsdp_main(args):
     # setup gpu memory monitoring
     if rank == 0:
         memmax = performance.Memory_Maximizer()
-
+    init_time_start = time.perf_counter()
     if cfg.hf_activation_checkpointing:
         model = AutoModelForSeq2SeqLM.from_pretrained(model_name, use_cache=False)
     else:
         model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
+    init_time_end = time.perf_counter()
+    
+    print(f" initilization time from pretrained weights {round(init_time_end- init_time_start, 4)} seconds")
 
     # summarization
     # model = T5ForConditionalGeneration.from_pretrained(model_name)
@@ -455,6 +458,7 @@ def fsdp_main(args):
         if rank == 0:
             print(f"--> Model converted to BF16.\nRunning in PURE BFloat mode")
 
+    init_fsdp_time_start = time.perf_counter()
     model = FSDP(
         model,
         auto_wrap_policy=wrapping_policy,
@@ -462,6 +466,9 @@ def fsdp_main(args):
         device_id=torch.cuda.current_device(),
         limit_all_gathers=cfg.use_rate_limiter,
     )
+    init_fsdp_time_end = time.perf_counter()
+    print(f" fsdp initialization time {round(init_fsdp_time_end-init_fsdp_time_start, 4)} seconds")
+    
     # print(f"IMPORTANT - No mixed precision policy -fp32 running")
     # move model to gpu
     # model.to(local_rank)
