@@ -32,7 +32,7 @@ class benchmark_config:
     # master weights in bf16, optimizer in bf16
     pure_bfloat = False
     # master weights in fp32, optimizer in bf16
-    pure_optimizer = True
+    pure_optimizer = False
 
     # policies
 
