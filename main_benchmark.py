@@ -4,7 +4,7 @@ import os
 import argparse
 
 #from platformdirs import user_config_dir
-from psutil import net_if_addrs
+#from psutil import net_if_addrs
 from datasets_grammar.grammar_dataset import grammar
 
 import torch
