@@ -393,7 +393,7 @@ def fsdp_main(args):
         auto_wrap_policy=wrapping_policy,
         mixed_precision=mp_policy,
         sharding_strategy=model_sharding_strategy,
-        backward_prefetch=backward_policy,
+        #backward_prefetch=backward_policy,
         device_id=torch.cuda.current_device(),  # streaming init
         limit_all_gathers=cfg.use_rate_limiter,
         # inflight_max=cfg.inflight_max,
