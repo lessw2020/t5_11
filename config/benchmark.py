@@ -1,4 +1,8 @@
 from dataclasses import dataclass
+from torch.distributed.fsdp import (
+    ShardingStrategy,
+    BackwardPrefetch,
+)
 
 
 @dataclass
