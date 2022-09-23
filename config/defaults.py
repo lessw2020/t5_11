@@ -25,7 +25,11 @@ class train_config:
     # google/t5-v1_1-large
     # google/t5-v1_1-xl  #3b
     # google/t5-v1_1-xxl #11b
-
+    
+    #mixed precision
+    use_mixed_precision: bool = True
+    use_fp16: bool = False
+        
     # save models
     save_model: bool = False
     save_folder = "training_checkpoints"
@@ -46,7 +50,7 @@ class train_config:
     backward_policy = BackwardPrefetch.BACKWARD_PRE
 
     # optimizer
-    optimizer_type = "AnyPrecision"
+    optimizer_type = "childtuning"
     momentum_dtype = torch.float32
     variance_dtype = torch.float32
     use_kahan = False
@@ -63,7 +67,7 @@ class train_config:
     fsdp_activation_checkpointing: bool = True
 
     # datasets
-    dataset_train = "datasets_grammar/grammar_train.csv"
+    dataset_train = "datasets_grammar/gtrain_1k.csv"
     dataset_test = "datasets_grammar/grammar_validation.csv"
 
     # training
@@ -71,7 +75,7 @@ class train_config:
     num_epochs: int = 1
 
     # validation
-    run_validation: bool = True
+    run_validation: bool = Flase
     val_batch_size = 18
     block_for_validation: bool = False
 
