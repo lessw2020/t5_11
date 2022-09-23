@@ -460,6 +460,7 @@ def fsdp_main(args):
         auto_wrap_policy=wrapping_policy,
         mixed_precision=mp_policy,
         device_id=torch.cuda.current_device(),
+        limit_all_gathers=cfg.use_rate_limiter,
     )
     # print(f"IMPORTANT - No mixed precision policy -fp32 running")
     # move model to gpu
