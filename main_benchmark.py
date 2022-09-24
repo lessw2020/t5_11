@@ -467,7 +467,7 @@ def fsdp_main(args):
         limit_all_gathers=cfg.use_rate_limiter,
     )
     init_fsdp_time_end = time.perf_counter()
-    print(f" fsdp initialization time {round(init_fsdp_time_end-init_fsdp_time_start, 4)} seconds")
+    #print(f" fsdp initialization time {round(init_fsdp_time_end-init_fsdp_time_start, 4)} seconds")
     
     # print(f"IMPORTANT - No mixed precision policy -fp32 running")
     # move model to gpu
