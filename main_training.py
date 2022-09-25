@@ -262,6 +262,13 @@ def validation(model, local_rank, rank, world_size, test_loader):
     return val_loss
 
 
+def sync_all_device():
+    # setup() has already configured CUDA_VISIBLE_DEVICES such that each
+    # process exclusively works on its own set of devices. So it's safe to
+    # do device sync here
+    for d in range(torch.cuda.device_count()):
+        torch.cuda.synchronize(d)
+        
 # ---- fsdp main ------------------------------------------------------------
 
 
