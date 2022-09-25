@@ -170,6 +170,9 @@ def format_metrics_to_gb(item):
     metric_num = round(metric_num, ndigits=4)
     return metric_num
 
+def format_stats(item, rounding=8):
+    return round(item, ndigits=rounding)
+
 
 # ----------  Training ----------------------------------------------------------
 def train(
