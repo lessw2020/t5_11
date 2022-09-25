@@ -374,7 +374,7 @@ def fsdp_main(args):
         model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
     init_time_end = time.perf_counter()
     
-    print(f" initilization time from pretrained weights {round(init_time_end- init_time_start, 4)} seconds")
+    
 
     # summarization
     # model = T5ForConditionalGeneration.from_pretrained(model_name)
@@ -385,6 +385,7 @@ def fsdp_main(args):
         print(f"--> Training for {model_name}")
         total_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
         print(f"\n--> {model_name} has {total_params/1e6} Million params\n")
+        print(f" initilization time from pretrained weights {round(init_time_end- init_time_start, 4)} seconds")
 
         # print(f"{dataset_name} contains: {dataset.keys()}")
         # print("Size of {dataset_name} train dataset: ", dataset["train"].shape)
