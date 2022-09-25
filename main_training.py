@@ -71,6 +71,8 @@ from collections import deque
 
 from madgrad import MirrorMADGRAD as mirror
 
+from utils.calculations_utils import calc_flop
+
 # some globals
 g_gigabyte = 1024**3
 
@@ -366,6 +368,10 @@ def fsdp_main(args):
         model.gradient_checkpointing_enable()
         if rank == 0:
             print(f"HF Activation checkpointing enabled\n")
+            
+    model_config = model.config
+    embedding_size = (model.state_dict()["shared.weight"].shape)[1]
+    FLOP = calc_flop(cfg, model_config, cfg.model_max_length, embedding_size)
 
     # --- sharding policy
     model_sharding_strategy = (
@@ -548,8 +554,10 @@ def fsdp_main(args):
 
         if rank == 0:
             print(f"--> epoch {epoch} completed...entering save and stats zone")
-
+         
+            print(f"epoch_time = {time.time() - t0}")
             dur.append(time.time() - t0)
+            
             train_acc_tracking.append(train_accuracy.item())
 
             if cfg.run_validation:
@@ -562,6 +570,9 @@ def fsdp_main(args):
                 mem_reserved_tracker.append(
                     format_metrics_to_gb(torch.cuda.memory_reserved())
                 )
+                
+            net_flops = format_stats(FLOP / 10**12 / total_epoch_time, rounding=6)
+            print(f"TFLOP/s/GPU: {net_flops}")
 
         if cfg.save_model and curr_val_loss < best_val_loss:
             # update curr best val accuracy
@@ -598,6 +609,22 @@ def fsdp_main(args):
 
             best_val_loss = curr_val_loss
             print(f"-->>>> New Val Loss Record: {best_val_loss}")
+        sync_all_device()
+        end_training_time = time.time()
+
+        delays = [None for _ in range(world_size)]
+        torch.distributed.all_gather_object(
+        delays, (end_training_time - start_training_time) / epochs
+         )
+        for i, item in enumerate(delays):
+            delays[i] = round(item, 4)
+
+        if rank == 0:
+            print("Flops cnt and delays", FLOP, delays)
+
+            gflops_gpu = FLOP / 10**9 * np.reciprocal(np.array(delays))
+            tflops_gpu = FLOP / 10**12 * np.reciprocal(np.array(delays))
+            print(f"gflops per gpu={gflops_gpu}")
 
     # init_end_event.record()
     if rank == 0:
@@ -625,7 +652,14 @@ def fsdp_main(args):
         if cfg.use_rate_limiter:
             print(f"Rate Limit = {cfg.inflight_max}\n")
         print(f"Batch size = {cfg.batch_size}")
+        
+        if rank == 0:
 
+            # print("LEN Tflops",len(tflops_gpu), sum(tflops_gpu), tflops_gpu)
+            print(
+                f"gflops/gpu = {sum(gflops_gpu) / len(gflops_gpu):.2f} ({stdev(gflops_gpu):.2f})\n"
+                f"Tflops/gpu = {sum(tflops_gpu) / len(tflops_gpu):.2f} ({stdev(tflops_gpu):.2f})\n"
+            )
         # memory summary
         if cfg.memory_report and rank == 0:
             print(
