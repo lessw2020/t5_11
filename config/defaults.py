@@ -26,6 +26,8 @@ class train_config:
     # google/t5-v1_1-xl  #3b
     # google/t5-v1_1-xxl #11b
     
+    model_max_length = 512
+    
     #mixed precision
     use_mixed_precision: bool = True
     use_fp16: bool = False
@@ -36,7 +38,7 @@ class train_config:
     checkpoint_max_save_count: int = (
         2  # number of 'best' checkpoints to save based on val loss
     )
-
+    
     # model weights
     model_in_bf16 = False
 
