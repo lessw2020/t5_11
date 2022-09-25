@@ -565,8 +565,10 @@ def fsdp_main(args):
 
         if rank == 0:
             print(f"--> epoch {epoch} completed...entering save and stats zone")
-         
-            print(f"epoch_time = {time.time() - t0}")
+            total_epoch_time = time.time() - t0
+            print(f"epoch_time = {total_epoch_time}")
+            
+            
             dur.append(time.time() - t0)
             
             train_acc_tracking.append(train_accuracy.item())
