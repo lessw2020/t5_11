@@ -412,7 +412,7 @@ def fsdp_main(args):
         sharding_strategy=model_sharding_strategy,
         #backward_prefetch=backward_policy,
         device_id=torch.cuda.current_device(),  # streaming init
-        #limit_all_gathers=cfg.use_rate_limiter,
+        limit_all_gathers=cfg.use_rate_limiter,
         # inflight_max=cfg.inflight_max,
     )
 
