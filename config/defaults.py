@@ -47,7 +47,7 @@ class train_config:
     print_sharding_plan: bool = False
 
     # use rate limiter
-    use_rate_limiter: bool = True
+    use_rate_limiter: bool = False
     inflight_max = 2
     backward_policy = BackwardPrefetch.BACKWARD_PRE
 
@@ -73,7 +73,7 @@ class train_config:
     dataset_test = "datasets_grammar/grammar_validation.csv"
 
     # training
-    batch_size: int = 16
+    batch_size: int = 4
     num_epochs: int = 2
 
     # validation
