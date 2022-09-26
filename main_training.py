@@ -539,7 +539,9 @@ def fsdp_main(args):
         fn = cfg.model_name + "memory_tracking.txt"
         mem_alloc_tracker = []
         mem_reserved_tracker = []
-
+        
+    start_training_time = time.time()
+    
     for epoch in range(1, epochs + 1):
         if rank == 0:
             print(f"\n--> Starting Epoch {epoch}")
