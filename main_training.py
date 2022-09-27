@@ -659,9 +659,9 @@ def fsdp_main(args):
         print()
 
         # memory
-#         if cfg.track_memory:
-#             print(f"total memory reserved: {mem_reserved_tracker}")
-#             print(f"total memory allocated: {mem_alloc_tracker}")
+        if cfg.track_memory:
+            print(f"total memory reserved: {mem_reserved_tracker}")
+            print(f"total memory allocated: {mem_alloc_tracker}")
         memmax.stop()
 
         print(f"Training accuracy: {train_acc_tracking}")
