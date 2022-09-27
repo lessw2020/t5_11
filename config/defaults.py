@@ -47,7 +47,7 @@ class train_config:
     print_sharding_plan: bool = False
 
     # use rate limiter
-    use_rate_limiter: bool = False
+    use_rate_limiter: bool = True
     inflight_max = 2
     backward_policy = BackwardPrefetch.BACKWARD_PRE
 
