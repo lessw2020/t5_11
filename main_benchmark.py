@@ -666,7 +666,7 @@ def fsdp_main(args):
             best_val_loss = curr_val_loss
             print(f"-->>>> New Val Loss Record: {best_val_loss}")
 
-    sync_all_device()
+    #sync_all_device()
     end_training_time = time.time()
 
     delays = [None for _ in range(world_size)]
