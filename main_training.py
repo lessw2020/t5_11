@@ -48,7 +48,7 @@ from datasets import load_dataset, load_metric
 from torch.utils.data import DataLoader
 from pathlib import Path
 from torch.utils.data import DataLoader
-
+import performance
 
 from ChildTuningOptimizer import ChildTuningAdamW
 
@@ -416,12 +416,14 @@ def fsdp_main(args):
         # inflight_max=cfg.inflight_max,
     )
 
-    # fsdp must do the checkpointing after sharding...
+    # initializaing memory stat tracker
     if rank == 0:
         print(
             f"Rate Limiting is {cfg.use_rate_limiter}, inflight count = {cfg.inflight_max}"
         )
-
+        memmax = performance.Memory_Maximizer()
+        
+     # fsdp must do the checkpointing after sharding...
     if cfg.fsdp_activation_checkpointing:
         policies.apply_fsdp_checkpointing(model)
         if rank == 0:
@@ -517,6 +519,7 @@ def fsdp_main(args):
         train_acc_tracking = []
         val_acc_tracking = []
         dq = deque(maxlen=cfg.checkpoint_max_save_count + 1)
+        memmax.start()
 
         training_start_time = time.time()
 
@@ -559,7 +562,10 @@ def fsdp_main(args):
             sampler=sampler1,
             profiler=torch_profiler,
         )
-
+        
+        if rank == 0:
+            memmax.update()
+            
         if cfg.run_validation:
             curr_val_loss = validation(model, local_rank, rank, world_size, test_loader)
 
@@ -640,6 +646,7 @@ def fsdp_main(args):
             gflops_gpu = FLOP / 10**9 * np.reciprocal(np.array(delays))
             tflops_gpu = FLOP / 10**12 * np.reciprocal(np.array(delays))
             print(f"gflops per gpu={gflops_gpu}")
+            
 
     # init_end_event.record()
     if rank == 0:
@@ -652,9 +659,10 @@ def fsdp_main(args):
         print()
 
         # memory
-        if cfg.track_memory:
-            print(f"total memory reserved: {mem_reserved_tracker}")
-            print(f"total memory allocated: {mem_alloc_tracker}")
+#         if cfg.track_memory:
+#             print(f"total memory reserved: {mem_reserved_tracker}")
+#             print(f"total memory allocated: {mem_alloc_tracker}")
+        memmax.stop()
 
         print(f"Training accuracy: {train_acc_tracking}")
         if cfg.run_validation:
