@@ -29,7 +29,7 @@ class train_config:
     model_max_length = 512
     
     #mixed precision
-    use_mixed_precision: bool = True
+    use_mixed_precision: bool = False
     use_fp16: bool = True
         
     # save models
