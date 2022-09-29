@@ -30,7 +30,7 @@ class train_config:
     
     #mixed precision
     use_mixed_precision: bool = True
-    use_fp16: bool = True
+    use_fp16: bool = False
         
     # save models
     save_model: bool = False
