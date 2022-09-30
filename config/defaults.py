@@ -62,7 +62,7 @@ class train_config:
 
     # policies
     fsdp_unit_size = 1000000
-    use_mixed_precision: bool = False
+    
 
     # activation checkpointing
     hf_activation_checkpointing: bool = False
