@@ -125,7 +125,9 @@ def get_policies(cfg, fsdp_unit_params=1000000):
             # mixed_precision_policy = policies.fpSixteen
             print(f"bFloat16 support not present. Not using for mixed precision")
 
-    wrapping_policy = policies.get_t5_wrapper()
+    #wrapping_policy = policies.get_t5_wrapper()
+    wrapping_policy = policies. get_size_policy()
+    
 
     return mixed_precision_policy, wrapping_policy
 
@@ -405,13 +407,10 @@ def fsdp_main(args):
         if rank == 0:
             print(f"Model in BF16, all training in BF16")
             
-    sized_based_wrapping_policy = functools.partial(
-        default_auto_wrap_policy, min_num_params=2000000
-    )
+
     model = FSDP(
         model,
-        #auto_wrap_policy=wrapping_policy,
-        auto_wrap_policy=sized_based_wrapping_policy,
+        auto_wrap_policy=wrapping_policy,
         mixed_precision=mp_policy,
         sharding_strategy=model_sharding_strategy,
         #backward_prefetch=backward_policy,
