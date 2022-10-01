@@ -404,10 +404,14 @@ def fsdp_main(args):
 
         if rank == 0:
             print(f"Model in BF16, all training in BF16")
-
+            
+    sized_based_wrapping_policy = functools.partial(
+        default_auto_wrap_policy, min_num_params=2000000
+    )
     model = FSDP(
         model,
-        auto_wrap_policy=wrapping_policy,
+        #auto_wrap_policy=wrapping_policy,
+        auto_wrap_policy=sized_based_wrapping_policy,
         mixed_precision=mp_policy,
         sharding_strategy=model_sharding_strategy,
         #backward_prefetch=backward_policy,
