@@ -30,7 +30,7 @@ class train_config:
     
     #mixed precision
     use_mixed_precision: bool = True
-    use_fp16: bool = True
+    use_fp16: bool = False
         
     # save models
     save_model: bool = False
@@ -73,7 +73,7 @@ class train_config:
     dataset_test = "datasets_grammar/grammar_validation.csv"
 
     # training
-    batch_size: int = 50
+    batch_size: int = 4
     num_epochs: int = 2
 
     # validation
