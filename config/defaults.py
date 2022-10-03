@@ -43,7 +43,8 @@ class train_config:
     model_in_bf16 = False
 
     # sharding policy
-    sharding_strategy: ShardingStrategy = ShardingStrategy.FULL_SHARD
+    #sharding_strategy: ShardingStrategy = ShardingStrategy.FULL_SHARD, 
+    sharding_strategy: ShardingStrategy = ShardingStrategy.SHARD_GRAD_OP
     print_sharding_plan: bool = False
 
     # use rate limiter
@@ -73,7 +74,7 @@ class train_config:
     dataset_test = "datasets_grammar/grammar_validation.csv"
 
     # training
-    batch_size: int = 3
+    batch_size: int = 25
     num_epochs: int = 2
 
     # validation
