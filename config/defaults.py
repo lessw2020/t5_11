@@ -66,14 +66,14 @@ class train_config:
 
     # activation checkpointing
     hf_activation_checkpointing: bool = False
-    fsdp_activation_checkpointing: bool = True
+    fsdp_activation_checkpointing: bool = False
 
     # datasets
     dataset_train = "datasets_grammar/gtrain_1k.csv"
     dataset_test = "datasets_grammar/grammar_validation.csv"
 
     # training
-    batch_size: int = 1
+    batch_size: int = 2
     num_epochs: int = 2
 
     # validation
