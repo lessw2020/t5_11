@@ -4,7 +4,7 @@ import torch.distributed as dist
 from torch.distributed.algorithms._checkpoint.checkpoint_wrapper import (
     checkpoint_wrapper,
     CheckpointImpl,
-    apply_activation_checkpointing,
+    apply_activation_checkpointing_wrapper, #apply_activation_checkpointing on Nightlies now keeping original for tests with current dockers    
 )
 
 from transformers.models.t5.modeling_t5 import T5Block
