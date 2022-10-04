@@ -67,7 +67,7 @@ class train_config:
 
     # activation checkpointing
     hf_activation_checkpointing: bool = False
-    fsdp_activation_checkpointing: bool = False
+    fsdp_activation_checkpointing: bool = True
 
     # datasets
     dataset_train = "datasets_grammar/gtrain_1k.csv"
