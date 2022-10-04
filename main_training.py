@@ -125,8 +125,8 @@ def get_policies(cfg, fsdp_unit_params=1000000):
             # mixed_precision_policy = policies.fpSixteen
             print(f"bFloat16 support not present. Not using for mixed precision")
 
-    wrapping_policy = policies.get_t5_wrapper()
-    #wrapping_policy = policies. get_size_policy(2e8)
+    #wrapping_policy = policies.get_t5_wrapper()
+    wrapping_policy = policies. get_size_policy(10e8)
     
 
     return mixed_precision_policy, wrapping_policy
