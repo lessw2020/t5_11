@@ -64,6 +64,7 @@ import datasets_grammar as dg
 import tqdm
 import numpy as np
 from statistics import stdev
+
 # config
 import config
 
@@ -126,8 +127,7 @@ def get_policies(cfg, fsdp_unit_params=1000000):
             print(f"bFloat16 support not present. Not using for mixed precision")
 
     wrapping_policy = policies.get_t5_wrapper()
-    #wrapping_policy = policies. get_size_policy(10e8)
-    
+    # wrapping_policy = policies. get_size_policy(10e8)
 
     return mixed_precision_policy, wrapping_policy
 
@@ -172,6 +172,7 @@ def format_metrics_to_gb(item):
     metric_num = item / g_gigabyte
     metric_num = round(metric_num, ndigits=4)
     return metric_num
+
 
 def format_stats(item, rounding=8):
     return round(item, ndigits=rounding)
@@ -271,7 +272,8 @@ def sync_all_device():
     # do device sync here
     for d in range(torch.cuda.device_count()):
         torch.cuda.synchronize(d)
-        
+
+
 # ---- fsdp main ------------------------------------------------------------
 
 
@@ -381,7 +383,7 @@ def fsdp_main(args):
         model.gradient_checkpointing_enable()
         if rank == 0:
             print(f"HF Activation checkpointing enabled\n")
-            
+
     model_config = model.config
     embedding_size = (model.state_dict()["shared.weight"].shape)[1]
     FLOP = calc_flop(cfg, model_config, cfg.model_max_length, embedding_size)
@@ -394,11 +396,11 @@ def fsdp_main(args):
         print(f"Sharding strategy = {model_sharding_strategy}")
 
     backward_policy = cfg.backward_policy
+
     if rank == 0:
+        print(f"additional settings: ")
         print(f"Backward Policy = {backward_policy}")
         print(f"Using Rate Limiter = {cfg.use_rate_limiter}")
-        if cfg.use_rate_limiter:
-            print(f"Rate Limit = {cfg.inflight_max}")
 
     if cfg.model_in_bf16:
         model.to(torch.bfloat16)
@@ -406,17 +408,15 @@ def fsdp_main(args):
 
         if rank == 0:
             print(f"Model in BF16, all training in BF16")
-            
 
     model = FSDP(
         model,
         auto_wrap_policy=wrapping_policy,
         mixed_precision=mp_policy,
         sharding_strategy=model_sharding_strategy,
-        #backward_prefetch=backward_policy,
+        backward_prefetch=backward_policy,
         device_id=torch.cuda.current_device(),  # streaming init
         limit_all_gathers=cfg.use_rate_limiter,
-        # inflight_max=cfg.inflight_max,
     )
 
     # initializaing memory stat tracker
@@ -425,8 +425,8 @@ def fsdp_main(args):
             f"Rate Limiting is {cfg.use_rate_limiter}, inflight count = {cfg.inflight_max}"
         )
         memmax = performance.Memory_Maximizer()
-        
-     # fsdp must do the checkpointing after sharding...
+
+    # fsdp must do the checkpointing after sharding...
     if cfg.fsdp_activation_checkpointing:
         policies.apply_fsdp_checkpointing(model)
         if rank == 0:
@@ -545,9 +545,9 @@ def fsdp_main(args):
         fn = cfg.model_name + "memory_tracking.txt"
         mem_alloc_tracker = []
         mem_reserved_tracker = []
-        
+
     start_training_time = time.time()
-    
+
     for epoch in range(1, epochs + 1):
         if rank == 0:
             print(f"\n--> Starting Epoch {epoch}")
@@ -565,10 +565,10 @@ def fsdp_main(args):
             sampler=sampler1,
             profiler=torch_profiler,
         )
-        
+
         if rank == 0:
             memmax.update()
-            
+
         if cfg.run_validation:
             curr_val_loss = validation(model, local_rank, rank, world_size, test_loader)
 
@@ -578,10 +578,9 @@ def fsdp_main(args):
             print(f"--> epoch {epoch} completed...entering save and stats zone")
             total_epoch_time = time.time() - t0
             print(f"epoch_time = {total_epoch_time}")
-            
-            
+
             dur.append(time.time() - t0)
-            
+
             train_acc_tracking.append(train_accuracy.item())
 
             if cfg.run_validation:
@@ -594,7 +593,7 @@ def fsdp_main(args):
                 mem_reserved_tracker.append(
                     format_metrics_to_gb(torch.cuda.memory_reserved())
                 )
-                
+
             net_flops = format_stats(FLOP / 10**12 / total_epoch_time, rounding=6)
             print(f"TFLOP/s/GPU: {net_flops}")
 
@@ -638,8 +637,8 @@ def fsdp_main(args):
 
         delays = [None for _ in range(world_size)]
         torch.distributed.all_gather_object(
-        delays, (end_training_time - start_training_time) / epochs
-         )
+            delays, (end_training_time - start_training_time) / epochs
+        )
         for i, item in enumerate(delays):
             delays[i] = round(item, 4)
 
@@ -649,7 +648,6 @@ def fsdp_main(args):
             gflops_gpu = FLOP / 10**9 * np.reciprocal(np.array(delays))
             tflops_gpu = FLOP / 10**12 * np.reciprocal(np.array(delays))
             print(f"gflops per gpu={gflops_gpu}")
-            
 
     # init_end_event.record()
     if rank == 0:
@@ -678,7 +676,7 @@ def fsdp_main(args):
         if cfg.use_rate_limiter:
             print(f"Rate Limit = {cfg.inflight_max}\n")
         print(f"Batch size = {cfg.batch_size}")
-        
+
         if rank == 0:
 
             # print("LEN Tflops",len(tflops_gpu), sum(tflops_gpu), tflops_gpu)
