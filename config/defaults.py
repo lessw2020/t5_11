@@ -43,7 +43,7 @@ class train_config:
     model_in_bf16 = False
 
     # sharding policy
-    sharding_strategy: ShardingStrategy = (ShardingStrategy.FULL_SHARD,)
+    sharding_strategy: ShardingStrategy = ShardingStrategy.FULL_SHARD
     # sharding_strategy: ShardingStrategy = ShardingStrategy.SHARD_GRAD_OP
     print_sharding_plan: bool = False
 
