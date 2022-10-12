@@ -421,9 +421,6 @@ def fsdp_main(args):
 
     # initializaing memory stat tracker
     if rank == 0:
-        print(
-            f"Rate Limiting is {cfg.use_rate_limiter}, inflight count = {cfg.inflight_max}"
-        )
         memmax = performance.Memory_Maximizer()
 
     # fsdp must do the checkpointing after sharding...
