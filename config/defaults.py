@@ -16,7 +16,7 @@ class train_config:
     seed: int = 2022
 
     # model
-    model_name = "google/t5-v1_1-xxl"  # "google/t5-v1_1-small"
+    model_name = "google/t5-v1_1-large"  # "google/t5-v1_1-small"
     tokenizer = "t5-large"
     # available models
     ## t5-base
@@ -25,26 +25,26 @@ class train_config:
     # google/t5-v1_1-large
     # google/t5-v1_1-xl  #3b
     # google/t5-v1_1-xxl #11b
-    
+
     model_max_length = 512
-    
-    #mixed precision
+
+    # mixed precision
     use_mixed_precision: bool = True
     use_fp16: bool = False
-        
+
     # save models
     save_model: bool = False
     save_folder = "training_checkpoints"
     checkpoint_max_save_count: int = (
         2  # number of 'best' checkpoints to save based on val loss
     )
-    
+
     # model weights
     model_in_bf16 = False
 
     # sharding policy
-    sharding_strategy: ShardingStrategy = ShardingStrategy.FULL_SHARD, 
-    #sharding_strategy: ShardingStrategy = ShardingStrategy.SHARD_GRAD_OP
+    sharding_strategy: ShardingStrategy = (ShardingStrategy.FULL_SHARD,)
+    # sharding_strategy: ShardingStrategy = ShardingStrategy.SHARD_GRAD_OP
     print_sharding_plan: bool = False
 
     # use rate limiter
@@ -53,7 +53,7 @@ class train_config:
     backward_policy = BackwardPrefetch.BACKWARD_PRE
 
     # optimizer
-    optimizer_type = "childtuning"
+    optimizer_type = "anyprecision"
     momentum_dtype = torch.float32
     variance_dtype = torch.float32
     use_kahan = False
@@ -63,7 +63,6 @@ class train_config:
 
     # policies
     fsdp_unit_size = 1000000
-    
 
     # activation checkpointing
     hf_activation_checkpointing: bool = False
