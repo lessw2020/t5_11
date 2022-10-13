@@ -4,7 +4,7 @@ import torch.distributed as dist
 from torch.distributed.algorithms._checkpoint.checkpoint_wrapper import (
     checkpoint_wrapper,
     CheckpointImpl,
-    apply_activation_checkpointing_wrapper, #apply_activation_checkpointing on Nightlies now keeping original for tests with current dockers    
+    apply_activation_checkpointing,  # apply_activation_checkpointing on Nightlies now keeping original for tests with current dockers
 )
 
 from transformers.models.t5.modeling_t5 import T5Block
@@ -26,6 +26,6 @@ def apply_fsdp_checkpointing(model):
     """
     print(f"--> applying fdsp activation checkpointing...")
 
-    apply_activation_checkpointing_wrapper(
+    apply_activation_checkpointing(
         model, checkpoint_wrapper_fn=non_reentrant_wrapper, check_fn=check_fn
     )
