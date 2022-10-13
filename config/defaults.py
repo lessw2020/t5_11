@@ -56,7 +56,7 @@ class train_config:
     optimizer_type = "anyprecision"
     momentum_dtype = torch.float32
     variance_dtype = torch.float32
-    use_kahan = True
+    use_kahan = False
 
     # dataloaders
     num_workers_dataloader: int = 0
