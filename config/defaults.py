@@ -29,7 +29,7 @@ class train_config:
     model_max_length = 512
 
     # mixed precision
-    use_mixed_precision: bool = True
+    use_mixed_precision: bool = False
     use_fp16: bool = False
 
     # save models
@@ -40,7 +40,7 @@ class train_config:
     )
 
     # model weights
-    model_in_bf16 = True
+    model_in_bf16 = False
 
     # sharding policy
     sharding_strategy: ShardingStrategy = ShardingStrategy.FULL_SHARD
@@ -54,8 +54,8 @@ class train_config:
 
     # optimizer
     optimizer_type = "anyprecision"
-    momentum_dtype = torch.bfloat16
-    variance_dtype = torch.bfloat16
+    momentum_dtype = torch.float32
+    variance_dtype = torch.float32
     use_kahan = True
 
     # dataloaders
@@ -73,7 +73,7 @@ class train_config:
     dataset_test = "datasets_grammar/grammar_validation.csv"
 
     # training
-    batch_size: int = 136
+    batch_size: int = 2
     num_epochs: int = 2
 
     # validation
