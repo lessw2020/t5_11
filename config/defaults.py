@@ -16,7 +16,7 @@ class train_config:
     seed: int = 2022
 
     # model
-    model_name = "google/t5-v1_1-xxl"  # "google/t5-v1_1-small"
+    model_name = "google/t5-v1_1-base"  # "google/t5-v1_1-small"
     tokenizer = "t5-large"
     # available models
     ## t5-base
@@ -43,7 +43,7 @@ class train_config:
     model_in_bf16 = True
 
     # sharding policy
-    sharding_strategy: ShardingStrategy = ShardingStrategy.FULL_SHARD
+    sharding_strategy: ShardingStrategy = ShardingStrategy.HYBRID_SHARD
     # sharding_strategy: ShardingStrategy = ShardingStrategy.SHARD_GRAD_OP
     print_sharding_plan: bool = False
 
@@ -73,8 +73,8 @@ class train_config:
     dataset_test = "datasets_grammar/grammar_validation.csv"
 
     # training
-    batch_size: int = 64
-    num_epochs: int = 2
+    batch_size: int = 24
+    num_epochs: int = 1
 
     # validation
     run_validation: bool = False
