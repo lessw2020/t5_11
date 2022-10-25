@@ -411,8 +411,8 @@ def fsdp_main(args):
     sub_group = None
     if model_sharding_strategy == ShardingStrategy.HYBRID_SHARD:
         subgroup, _ = dist.new_subgroups()
-        if rank ==0:
-            print(f"subgroup created - {subgroup=}")
+        if rank == 0:
+            print(f"--> HSDP active - subgroup created - {subgroup=}")
 
     model = FSDP(
         model,
